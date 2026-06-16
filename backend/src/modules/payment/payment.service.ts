@@ -57,7 +57,7 @@ export class PaymentService {
       totalAmount: servicePrice,
       tradeDesc: `PiPiBook booking ${booking.id.slice(0, 8)}`,
       itemName: booking.service?.title || 'Coaching Session',
-      returnURL: dto.returnUrl,
+      returnURL: dto.returnUrl ?? '',
       choosePayment: dto.paymentMethod,
     });
 

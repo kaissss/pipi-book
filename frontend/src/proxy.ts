@@ -5,7 +5,7 @@ const PROTECTED_PREFIXES = ["/member", "/coach", "/admin"];
 const COACH_PREFIXES = ["/coach"];
 const ADMIN_PREFIXES = ["/admin"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtected = PROTECTED_PREFIXES.some((prefix) =>

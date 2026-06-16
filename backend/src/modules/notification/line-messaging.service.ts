@@ -20,9 +20,7 @@ export class LineMessagingService {
   constructor(private readonly configService: ConfigService) {}
 
   private get channelAccessToken(): string {
-    return this.configService.get<string>(
-      'line.messagingChannelAccessToken',
-    );
+    return this.configService.get<string>('line.messagingChannelAccessToken') ?? '';
   }
 
   async pushMessage(lineUserId: string, message: string): Promise<void> {

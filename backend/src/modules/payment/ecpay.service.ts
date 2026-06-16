@@ -27,19 +27,19 @@ export class EcpayService {
   constructor(private readonly configService: ConfigService) {}
 
   private get merchantId(): string {
-    return this.configService.get<string>('ecpay.merchantId');
+    return this.configService.get<string>('ecpay.merchantId') ?? '';
   }
 
   private get hashKey(): string {
-    return this.configService.get<string>('ecpay.hashKey');
+    return this.configService.get<string>('ecpay.hashKey') ?? '';
   }
 
   private get hashIv(): string {
-    return this.configService.get<string>('ecpay.hashIv');
+    return this.configService.get<string>('ecpay.hashIv') ?? '';
   }
 
   private get apiUrl(): string {
-    return this.configService.get<string>('ecpay.apiUrl');
+    return this.configService.get<string>('ecpay.apiUrl') ?? '';
   }
 
   /**
@@ -126,7 +126,7 @@ export class EcpayService {
       TotalAmount: String(Math.round(order.totalAmount)),
       TradeDesc: order.tradeDesc,
       ItemName: order.itemName,
-      ReturnURL: returnURL,
+      ReturnURL: returnURL ?? '',
       ChoosePayment: this.mapPaymentMethod(order.choosePayment || 'Credit'),
       EncryptType: '1',
       ...(orderResultURL && { OrderResultURL: orderResultURL }),

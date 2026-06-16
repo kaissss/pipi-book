@@ -12,7 +12,7 @@ export class BookingRedisLockService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     const redisUrl = this.configService.get<string>('redis.url');
-    this.redis = new Redis(redisUrl, {
+    this.redis = new Redis(redisUrl ?? '', {
       maxRetriesPerRequest: 3,
       retryStrategy: (times) => Math.min(times * 100, 3000),
       lazyConnect: false,

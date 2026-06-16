@@ -2,7 +2,7 @@ import { registerAs } from '@nestjs/config';
 
 export const appConfig = registerAs('app', () => ({
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT, 10) || 3000,
+  port: parseInt(process.env.PORT ?? '3000', 10) || 3000,
   url: process.env.APP_URL || 'http://localhost:3000',
 }));
 
@@ -33,5 +33,5 @@ export const ecpayConfig = registerAs('ecpay', () => ({
 export const redisConfig = registerAs('redis', () => ({
   url: process.env.REDIS_URL,
   token: process.env.REDIS_TOKEN,
-  slotLockTtl: parseInt(process.env.SLOT_LOCK_TTL_SECONDS, 10) || 300,
+  slotLockTtl: parseInt(process.env.SLOT_LOCK_TTL_SECONDS ?? '300', 10) || 300,
 }));

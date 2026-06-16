@@ -36,9 +36,9 @@ export class LineAuthService {
     const params = new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      redirect_uri: redirectUri || defaultRedirectUri,
-      client_id: channelId,
-      client_secret: channelSecret,
+      redirect_uri: redirectUri || defaultRedirectUri || '',
+      client_id: channelId ?? '',
+      client_secret: channelSecret ?? '',
     });
 
     try {
@@ -95,7 +95,7 @@ export class LineAuthService {
     try {
       const params = new URLSearchParams({
         id_token: idToken,
-        client_id: channelId,
+        client_id: channelId ?? '',
       });
 
       const response = await axios.post(

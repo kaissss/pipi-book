@@ -15,8 +15,15 @@ export class BookingRedisLockService implements OnModuleInit, OnModuleDestroy {
     this.redis = new Redis(redisUrl ?? '', {
       maxRetriesPerRequest: 3,
       retryStrategy: (times) => Math.min(times * 100, 3000),
-      lazyConnect: false,
+      // Connect on first use rather than at boot so a momentarily unreachable
+      // Redis does not crash startup (important for local dev and cold deploys).
+      lazyConnect: true,
     });
+
+    // Kick off the connection in the background; failures are logged, not fatal.
+    this.redis.connect().catch((err) =>
+      this.logger.error({ message: 'Initial Redis connection failed', error: err.message }),
+    );
 
     this.redis.on('connect', () =>
       this.logger.log('Redis connected for slot locking'),

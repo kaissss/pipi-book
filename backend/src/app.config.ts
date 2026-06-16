@@ -2,8 +2,17 @@ import { registerAs } from '@nestjs/config';
 
 export const appConfig = registerAs('app', () => ({
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT ?? '3000', 10) || 3000,
-  url: process.env.APP_URL || 'http://localhost:3000',
+  // Railway (and most PaaS) inject PORT at runtime — always honour it.
+  port: parseInt(process.env.PORT ?? '4000', 10) || 4000,
+  url: process.env.APP_URL || 'http://localhost:4000',
+  // Comma-separated list of allowed frontend origins for CORS.
+  // Empty in development => allow all; set in production to lock down.
+  corsOrigins: (process.env.CORS_ORIGINS ?? process.env.FRONTEND_URL ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+  // Swagger is on by default; set ENABLE_SWAGGER=false to disable in production.
+  enableSwagger: process.env.ENABLE_SWAGGER !== 'false',
 }));
 
 export const jwtConfig = registerAs('jwt', () => ({

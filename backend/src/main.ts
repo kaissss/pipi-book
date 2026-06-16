@@ -11,19 +11,22 @@ async function bootstrap() {
   });
 
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('app.port', 3000);
+  const port = configService.get<number>('app.port', 4000);
   const nodeEnv = configService.get<string>('app.nodeEnv', 'development');
+  const corsOrigins = configService.get<string[]>('app.corsOrigins', []);
+  const enableSwagger = configService.get<boolean>('app.enableSwagger', true);
 
-  // Global prefix
-  app.setGlobalPrefix('api/v1');
+  // Health probes stay at the root (/health) so Railway and uptime monitors
+  // can reach them without the versioned API prefix.
+  app.setGlobalPrefix('api/v1', { exclude: ['health', 'health/ready'] });
 
-  // CORS
+  // In development we allow any origin for convenience. In production we only
+  // allow the explicit list from CORS_ORIGINS / FRONTEND_URL.
   app.enableCors({
-    origin: nodeEnv === 'production' ? false : true,
+    origin: corsOrigins.length > 0 ? corsOrigins : true,
     credentials: true,
   });
 
-  // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -35,8 +38,9 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger (non-production)
-  if (nodeEnv !== 'production') {
+  // Swagger stays available in production so the live API can be inspected and
+  // smoke-tested. Disable with ENABLE_SWAGGER=false if you prefer to hide it.
+  if (enableSwagger) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('PiPiBook API')
       .setDescription('PiPiBook LINE-integrated coach booking platform API')
@@ -49,10 +53,11 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup('api/docs', app, document);
-    logger.log(`Swagger docs available at /api/docs`);
+    logger.log('Swagger docs available at /api/docs');
   }
 
-  await app.listen(port);
+  // Bind to 0.0.0.0 so the container is reachable on Railway / Docker.
+  await app.listen(port, '0.0.0.0');
   logger.log(`PiPiBook backend running on port ${port} [${nodeEnv}]`);
 }
 

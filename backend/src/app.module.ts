@@ -17,6 +17,7 @@ import { BookingModule } from './modules/booking/booking.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { HealthModule } from './modules/health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -24,15 +25,19 @@ import { PrismaModule } from './prisma/prisma.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, jwtConfig, lineConfig, ecpayConfig, redisConfig],
-      envFilePath: ['.env'],
+      // .env.local overrides .env for local development.
+      envFilePath: ['.env.local', '.env'],
     }),
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         redis: config.get<string>('redis.url'),
+        // Fail fast on a bad command instead of hanging requests forever.
+        defaultJobOptions: { removeOnComplete: 100, removeOnFail: 200 },
       }),
     }),
     PrismaModule,
+    HealthModule,
     AuthModule,
     CoachModule,
     ServiceModule,

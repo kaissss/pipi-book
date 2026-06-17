@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useLineCallback } from "@/hooks/useAuth";
@@ -8,7 +8,7 @@ import { getStoredState, clearState } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { mutate: handleCallback, isPending, error, isSuccess } = useLineCallback();
@@ -72,5 +72,13 @@ export default function AuthCallbackPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }

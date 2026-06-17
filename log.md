@@ -114,3 +114,73 @@ Backend running at **http://localhost:4000** [development]
 cd backend
 npm run start:dev
 ```
+
+---
+
+## 2026-06-17 — Day 2: Railway Backend Deployed ✅
+
+### Goal
+Deploy NestJS backend to Railway via Docker.
+
+### Issues encountered & fixed
+
+| Issue | Fix |
+|---|---|
+| `npm ci` failed — no `package-lock.json` in `backend/` | Root uses npm workspaces; lock file lives at root. Rewrote Dockerfile to use `npm install` with `backend/` as standalone build context |
+| `Cannot find module '.prisma/client/default'` | `prisma generate` ran in builder stage but prod stage copied `node_modules` from prod-deps (no generate). Fixed by copying `node_modules/.prisma` from builder into production stage |
+| Prisma native engine crash | Missing `binaryTargets` in schema. Added `linux-musl-openssl-3.0.x` for Alpine Linux |
+| Docker vs Nixpacks confusion | Removed Nixpacks (`nixpacks.toml`). Railway now uses `backend/railway.json` with `"builder": "DOCKERFILE"` |
+| `prisma migrate deploy` not available in prod container | Moved `prisma` CLI from devDependencies → dependencies so it's available at runtime |
+
+### Supabase + Railway IPv4 gotcha ⚠️
+
+Railway only supports **IPv4**. Supabase's direct connection URL uses **IPv6** by default.
+
+**Fix:** Use the **Transaction Pooler** domain for **both** `DATABASE_URL` and `DIRECT_URL`.
+
+```env
+# Both point to the pooler (port 6543 and 5432 variants both use IPv4)
+DATABASE_URL=postgresql://postgres.[ref]:[password]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+DIRECT_URL=postgresql://postgres.[ref]:[password]@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
+```
+
+Do NOT use `db.[ref].supabase.co` — that resolves to IPv6 and Railway will fail to connect.
+
+### Final working setup
+
+- **Railway Root Directory**: `backend`
+- **Builder**: Dockerfile
+- **Health check**: `/health` → 200 ✅
+- **DB**: Supabase (pooler domain for both URLs)
+- **Redis**: Upstash
+- **Migrations**: run automatically on container start via `npx prisma migrate deploy`
+
+---
+
+## 2026-06-17 — Day 2 (continued): Vercel Frontend Build Fixed
+
+### Goal
+Fix frontend production build errors caught by `npm run build` / Vercel CI.
+
+### Issues found & fixed
+
+| File | Error | Fix |
+|---|---|---|
+| `src/components/booking/BookingCalendar.tsx` | `eventCursor` is not a valid FullCalendar prop — TypeScript build error | Removed prop; pointer cursor was already handled by `.fc .fc-event { cursor: pointer }` in `globals.css` |
+| `src/app/auth/login/page.tsx` | `useSearchParams()` not wrapped in `<Suspense>` — prerender error | Extracted content into `LoginContent` component, wrapped in `<Suspense>` in default export |
+| `src/app/auth/callback/page.tsx` | `useSearchParams()` not wrapped in `<Suspense>` — prerender error | Extracted content into `AuthCallbackContent` component, wrapped in `<Suspense>` in default export |
+
+### Root cause
+
+These bugs only surfaced on Vercel because:
+- `eventCursor` — TypeScript type-checking only runs during `next build`, not `next dev`
+- `useSearchParams` — Next.js static prerendering only runs during `next build`, not `next dev`
+
+### Lesson
+
+Always run `npm run build` locally before pushing to catch build-time errors that `npm run dev` silently ignores.
+
+### Result
+
+Frontend successfully deployed to Vercel ✅
+

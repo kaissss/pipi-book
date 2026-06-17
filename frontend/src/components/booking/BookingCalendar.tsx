@@ -92,7 +92,6 @@ export default function BookingCalendar({
             to: format(info.end, "yyyy-MM-dd"),
           });
         }}
-        eventCursor="pointer"
         eventDisplay="block"
       />
       <p className="text-xs text-muted-foreground mt-2 text-center">

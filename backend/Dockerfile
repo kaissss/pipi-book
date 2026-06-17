@@ -69,4 +69,5 @@ ENV NODE_ENV=production \
     PORT=4000
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/main.js"]
+# Run DB migrations on every deploy, then start the server.
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]

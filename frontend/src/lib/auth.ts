@@ -37,15 +37,7 @@ export function getStoredUser(): User | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.USER);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as User;
-    // Discard objects from before the User type was aligned with the backend
-    // (they had pictureUrl/lineId/isActive instead of avatar/lineUserId/status).
-    if (!parsed.lineUserId || !parsed.status) {
-      localStorage.removeItem(STORAGE_KEYS.USER);
-      return null;
-    }
-    return parsed;
+    return raw ? (JSON.parse(raw) as User) : null;
   } catch {
     return null;
   }

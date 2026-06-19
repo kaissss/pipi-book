@@ -56,8 +56,7 @@ export function truncate(str: string, maxLength: number): string {
   return `${str.slice(0, maxLength)}...`;
 }
 
-export function getInitials(name: string | undefined | null): string {
-  if (!name) return "?";
+export function getInitials(name: string): string {
   return name
     .split(" ")
     .slice(0, 2)

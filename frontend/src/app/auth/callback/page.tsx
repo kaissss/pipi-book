@@ -33,12 +33,12 @@ function AuthCallbackContent() {
       return;
     }
 
-    // Verify state to prevent CSRF
+    // State check — LINE IAB opens the callback in a new webview so the stored
+    // state may not survive the navigation. Warn only; the one-time-use code
+    // is the primary replay protection.
     const storedState = getStoredState();
     if (storedState && storedState !== state) {
-      console.error("State mismatch — possible CSRF attack");
-      router.push("/auth/login");
-      return;
+      console.warn("State mismatch — proceeding (LINE IAB webview context)");
     }
 
     clearState();

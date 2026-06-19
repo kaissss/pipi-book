@@ -79,7 +79,11 @@ export function useLineCallback() {
   return useMutation({
     mutationFn: authService.lineCallback,
     onSuccess: (data) => {
-      setTokens(data.tokens);
+      setTokens({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        expiresIn: data.expiresIn,
+      });
       setStoredUser(data.user);
       queryClient.setQueryData(QUERY_KEYS.ME, data.user);
 

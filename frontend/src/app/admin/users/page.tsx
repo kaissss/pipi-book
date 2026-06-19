@@ -89,7 +89,7 @@ export default function AdminUsersPage() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.pictureUrl} alt={user.displayName} />
+                          <AvatarImage src={user.avatar} alt={user.displayName} />
                           <AvatarFallback className="text-xs">
                             {getInitials(user.displayName)}
                           </AvatarFallback>
@@ -108,19 +108,19 @@ export default function AdminUsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(user.createdAt)}
+                      {user.createdAt ? formatDate(user.createdAt) : "—"}
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={user.isActive ? "default" : "secondary"}
+                        variant={user.status === "ACTIVE" ? "default" : "secondary"}
                         className="text-xs"
                       >
-                        {user.isActive ? "Active" : "Suspended"}
+                        {user.status === "ACTIVE" ? "Active" : "Suspended"}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       {user.role !== "ADMIN" && (
-                        user.isActive ? (
+                        user.status === "ACTIVE" ? (
                           <Button
                             variant="ghost"
                             size="sm"

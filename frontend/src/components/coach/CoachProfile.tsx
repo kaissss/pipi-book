@@ -22,7 +22,7 @@ export default function CoachProfile({ coach }: CoachProfileProps) {
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row gap-4 items-start">
               <Avatar className="h-20 w-20 shrink-0">
-                <AvatarImage src={coach.user.pictureUrl} alt={coach.user.displayName} />
+                <AvatarImage src={coach.user.avatar} alt={coach.user.displayName} />
                 <AvatarFallback className="text-2xl">
                   {getInitials(coach.user.displayName)}
                 </AvatarFallback>

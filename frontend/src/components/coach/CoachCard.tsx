@@ -24,7 +24,7 @@ export default function CoachCard({ coach }: CoachCardProps) {
         <div className="relative h-24 bg-gradient-to-br from-primary/20 to-primary/5">
           <div className="absolute -bottom-6 left-4">
             <Avatar className="h-16 w-16 border-4 border-background shadow-sm">
-              <AvatarImage src={coach.user.pictureUrl} alt={coach.user.displayName} />
+              <AvatarImage src={coach.user.avatar} alt={coach.user.displayName} />
               <AvatarFallback className="text-lg">
                 {getInitials(coach.user.displayName)}
               </AvatarFallback>

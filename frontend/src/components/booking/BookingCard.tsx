@@ -37,7 +37,7 @@ export default function BookingCard({
           {/* Other party */}
           <div className="flex items-center gap-3 sm:w-48 shrink-0">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={other.pictureUrl} alt={other.displayName} />
+              <AvatarImage src={other.avatar} alt={other.displayName} />
               <AvatarFallback>{getInitials(other.displayName)}</AvatarFallback>
             </Avatar>
             <div>

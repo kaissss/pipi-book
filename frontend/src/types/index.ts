@@ -4,15 +4,15 @@ export type UserRole = "STUDENT" | "COACH" | "ADMIN";
 
 export interface User {
   id: string;
-  lineId: string;
+  lineUserId: string;
   displayName: string;
-  pictureUrl?: string;
-  email?: string;
-  phone?: string;
+  avatar?: string;
+  email?: string | null;
+  phone?: string | null;
   role: UserRole;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AuthTokens {
@@ -23,7 +23,9 @@ export interface AuthTokens {
 
 export interface AuthResponse {
   user: User;
-  tokens: AuthTokens;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }
 
 // ─── Coach ────────────────────────────────────────────────────────────────────

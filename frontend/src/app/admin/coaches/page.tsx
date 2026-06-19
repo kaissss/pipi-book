@@ -72,7 +72,7 @@ export default function AdminCoachesPage() {
             <CardContent className="p-4">
               <div className="flex items-start gap-4">
                 <Avatar className="h-12 w-12 shrink-0">
-                  <AvatarImage src={coach.user.pictureUrl} alt={coach.user.displayName} />
+                  <AvatarImage src={coach.user.avatar} alt={coach.user.displayName} />
                   <AvatarFallback>{getInitials(coach.user.displayName)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">

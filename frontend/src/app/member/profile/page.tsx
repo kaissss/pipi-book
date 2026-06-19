@@ -43,7 +43,7 @@ export default function MemberProfilePage() {
       <Card>
         <CardContent className="pt-6 flex items-center gap-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={user?.pictureUrl} alt={user?.displayName} />
+            <AvatarImage src={user?.avatar} alt={user?.displayName} />
             <AvatarFallback className="text-xl">
               {user ? getInitials(user.displayName) : "?"}
             </AvatarFallback>

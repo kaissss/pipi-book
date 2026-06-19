@@ -40,7 +40,7 @@ export default function BookingConfirmation({
           {/* Coach */}
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={coach.user.pictureUrl} alt={coach.user.displayName} />
+              <AvatarImage src={coach.user.avatar} alt={coach.user.displayName} />
               <AvatarFallback>{getInitials(coach.user.displayName)}</AvatarFallback>
             </Avatar>
             <div>

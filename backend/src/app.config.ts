@@ -11,8 +11,12 @@ export const appConfig = registerAs('app', () => ({
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
-  // Swagger is on by default; set ENABLE_SWAGGER=false to disable in production.
-  enableSwagger: process.env.ENABLE_SWAGGER !== 'false',
+  // Swagger is on outside production. In production it's off unless explicitly
+  // enabled with ENABLE_SWAGGER=true, so the API surface isn't published by default.
+  enableSwagger:
+    process.env.ENABLE_SWAGGER !== undefined
+      ? process.env.ENABLE_SWAGGER === 'true'
+      : (process.env.NODE_ENV || 'development') !== 'production',
 }));
 
 export const jwtConfig = registerAs('jwt', () => ({

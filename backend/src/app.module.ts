@@ -32,7 +32,8 @@ import { PrismaModule } from './prisma/prisma.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         redis: config.get<string>('redis.url'),
-        // Fail fast on a bad command instead of hanging requests forever.
+        // Cap retained jobs so Redis doesn't grow unbounded: keep the last 100
+        // completed and 200 failed jobs, then auto-trim older ones.
         defaultJobOptions: { removeOnComplete: 100, removeOnFail: 200 },
       }),
     }),

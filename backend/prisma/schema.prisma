@@ -7,7 +7,8 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   // Direct connection (Supabase port 5432) used by `prisma migrate`.
-  // Falls back to DATABASE_URL when DIRECT_URL is unset (e.g. local Postgres).
+  // DIRECT_URL must be set — Prisma does NOT fall back to DATABASE_URL. For a
+  // local Postgres without a pooler, set DIRECT_URL to the same value as DATABASE_URL.
   directUrl = env("DIRECT_URL")
 }
 

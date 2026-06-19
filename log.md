@@ -184,3 +184,30 @@ Always run `npm run build` locally before pushing to catch build-time errors tha
 
 Frontend successfully deployed to Vercel ✅
 
+---
+
+## 2026-06-19 — Day 4: Code Review of Railway-Deploy Refactor
+
+### Goal
+Review the backend redesign for Railway deploy + local dev (commits `50a0d34`..`6f16342`) and remove unnecessary changes.
+
+### Issues found & fixed
+
+| Severity | File | Issue | Fix |
+|---|---|---|---|
+| 🔴 High | `backend/src/main.ts` | CORS dropped the `nodeEnv` check — with `CORS_ORIGINS` empty, `origin` fell back to `true`, reflecting **any** origin with `credentials: true` (CWE-942) | Fail closed in production: `origin: false` when the allowlist is empty |
+| 🟠 Med | `backend/src/app.config.ts` | `enableSwagger` defaulted to `true`, publishing `/api/docs` in production by default | Off in prod unless `ENABLE_SWAGGER=true`; on otherwise |
+| 🟠 Med | `backend/prisma/schema.prisma` | Comment claimed `directUrl` falls back to `DATABASE_URL` when unset — it does not; `prisma migrate deploy` (run on every Docker deploy) would fail | Corrected comment; `DIRECT_URL` must be set (mirror `DATABASE_URL` for local) |
+| 🟡 Low | `backend/src/app.module.ts` | BullMQ comment ("fail fast on a bad command") didn't match the code (job retention) | Rewrote comment to describe job trimming |
+| 🟡 Low | `frontend/src/app/auth/login/page.tsx` | No-op SVG edit (`.63`→`.630`, numerically identical) — pure diff noise | Reverted |
+| 🟡 Low | `backend/package.json` | Dead `railway:start` script — Railway uses the Dockerfile `CMD`, nothing references it | Removed |
+
+### Action items (config, not code)
+
+- [ ] Set `CORS_ORIGINS` (frontend URL) in Railway — with the CORS fix, a missing value now **blocks** the frontend in prod instead of silently allowing all origins.
+- [ ] Confirm `DIRECT_URL` is set in Railway (already covered by the pooler setup from Day 2).
+
+### Result
+
+Backend type-checks clean (`tsc --noEmit` → 0 errors). Changes left in the working tree for review.
+

@@ -21,9 +21,16 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1', { exclude: ['health', 'health/ready'] });
 
   // In development we allow any origin for convenience. In production we only
-  // allow the explicit list from CORS_ORIGINS / FRONTEND_URL.
+  // allow the explicit list from CORS_ORIGINS / FRONTEND_URL, and fail closed
+  // (deny all cross-origin) if that list was left empty — never reflect-all
+  // with credentials enabled.
   app.enableCors({
-    origin: corsOrigins.length > 0 ? corsOrigins : true,
+    origin:
+      corsOrigins.length > 0
+        ? corsOrigins
+        : nodeEnv === 'production'
+          ? false
+          : true,
     credentials: true,
   });
 
@@ -38,8 +45,8 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger stays available in production so the live API can be inspected and
-  // smoke-tested. Disable with ENABLE_SWAGGER=false if you prefer to hide it.
+  // Swagger is enabled outside production; in production set ENABLE_SWAGGER=true
+  // to expose it for live inspection / smoke-testing.
   if (enableSwagger) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('PiPiBook API')

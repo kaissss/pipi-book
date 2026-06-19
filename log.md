@@ -242,3 +242,29 @@ Run `tsc --noEmit` against real API response shapes (not assumed ones) before in
 
 LINE login flow works end-to-end in production. User lands on `/member/dashboard` after auth.
 
+---
+
+## 2026-06-19 — Day 4 (continued): Fix Post-Login Redirect Loop
+
+### Issue
+
+After a successful login, `router.push("/member/dashboard")` triggered the Edge middleware, which read `cb_access_token` from cookies, found nothing, and redirected back to `/auth/login?redirect=%2Fmember%2Fdashboard`.
+
+### Root cause
+
+`setTokens()` wrote the access token to `localStorage` only. The Edge middleware (`proxy.ts`) reads from cookies — it cannot access `localStorage` (runs server-side before the page renders). The cookie was never set, so the middleware always treated the user as unauthenticated.
+
+Both halves were written independently and assumed different storage mechanisms.
+
+### Fix
+
+`setTokens()` now mirrors the access token into `cb_access_token` cookie (`SameSite=Lax`, `max-age` = token TTL) alongside `localStorage`. `clearTokens()` expires the cookie in the same call.
+
+```ts
+document.cookie = `cb_access_token=${tokens.accessToken}; path=/; max-age=${maxAge}; SameSite=Lax`;
+```
+
+### Result
+
+Post-login redirect to `/member/dashboard` succeeds. Middleware reads the cookie, verifies the JWT payload (role + expiry), and allows the navigation.
+

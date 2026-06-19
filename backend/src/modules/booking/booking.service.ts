@@ -204,20 +204,33 @@ export class BookingService {
   async getMyBookings(
     memberId: string,
     status?: BookingStatus,
-  ): Promise<BookingResponseDto[]> {
-    const bookings = await this.bookingRepository.findByMemberId(
-      memberId,
-      status,
-    );
-    return bookings.map(this.toResponseDto);
+    page = 1,
+    limit = 10,
+  ): Promise<{ data: BookingResponseDto[]; total: number; page: number; limit: number; totalPages: number }> {
+    const { data, total } = await this.bookingRepository.findByMemberId(memberId, status, page, limit);
+    return {
+      data: data.map(this.toResponseDto),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async getPiPiBookings(
     coachId: string,
     status?: BookingStatus,
-  ): Promise<BookingResponseDto[]> {
-    const bookings = await this.bookingRepository.findByCoachId(coachId, status);
-    return bookings.map(this.toResponseDto);
+    page = 1,
+    limit = 10,
+  ): Promise<{ data: BookingResponseDto[]; total: number; page: number; limit: number; totalPages: number }> {
+    const { data, total } = await this.bookingRepository.findByCoachId(coachId, status, page, limit);
+    return {
+      data: data.map(this.toResponseDto),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   private toResponseDto(booking: any): BookingResponseDto {

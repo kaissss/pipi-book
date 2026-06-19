@@ -35,29 +35,41 @@ export class BookingRepository {
   async findByMemberId(
     memberId: string,
     status?: BookingStatus,
-  ): Promise<BookingWithRelations[]> {
-    return this.prisma.booking.findMany({
-      where: {
-        memberId,
-        ...(status && { bookingStatus: status }),
-      },
-      ...bookingWithRelations,
-      orderBy: { createdAt: 'desc' },
-    });
+    page = 1,
+    limit = 10,
+  ): Promise<{ data: BookingWithRelations[]; total: number }> {
+    const where = { memberId, ...(status && { bookingStatus: status }) };
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.booking.findMany({
+        where,
+        ...bookingWithRelations,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.booking.count({ where }),
+    ]);
+    return { data, total };
   }
 
   async findByCoachId(
     coachId: string,
     status?: BookingStatus,
-  ): Promise<BookingWithRelations[]> {
-    return this.prisma.booking.findMany({
-      where: {
-        coachId,
-        ...(status && { bookingStatus: status }),
-      },
-      ...bookingWithRelations,
-      orderBy: { createdAt: 'desc' },
-    });
+    page = 1,
+    limit = 10,
+  ): Promise<{ data: BookingWithRelations[]; total: number }> {
+    const where = { coachId, ...(status && { bookingStatus: status }) };
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.booking.findMany({
+        where,
+        ...bookingWithRelations,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.booking.count({ where }),
+    ]);
+    return { data, total };
   }
 
   async findBySlotId(slotId: string): Promise<Booking | null> {

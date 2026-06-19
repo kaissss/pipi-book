@@ -9,6 +9,8 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -38,13 +40,31 @@ export class BookingController {
   }
 
   @Get('me')
-  @ApiOperation({ summary: 'Get my bookings' })
+  @ApiOperation({ summary: 'Get my bookings (paginated)' })
   @ApiQuery({ name: 'status', required: false, enum: BookingStatus })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   async getMyBookings(
     @CurrentUser() user: CurrentUserPayload,
     @Query('status') status?: BookingStatus,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
   ) {
-    return this.bookingService.getMyBookings(user.sub, status);
+    return this.bookingService.getMyBookings(user.sub, status, page, limit);
+  }
+
+  @Get('coach')
+  @ApiOperation({ summary: 'Get bookings for the current coach (paginated)' })
+  @ApiQuery({ name: 'status', required: false, enum: BookingStatus })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async getPiPiBookings(
+    @CurrentUser() user: CurrentUserPayload,
+    @Query('status') status?: BookingStatus,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
+  ) {
+    return this.bookingService.getPiPiBookings(user.sub, status, page, limit);
   }
 
   @Get(':id')

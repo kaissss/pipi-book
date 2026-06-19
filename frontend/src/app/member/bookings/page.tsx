@@ -18,7 +18,6 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 export default function MemberBookingsPage() {
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
-
   const { data, isLoading } = useMyBookings({
     status: status === "all" ? undefined : (status as BookingStatus),
     page,
@@ -69,7 +68,6 @@ export default function MemberBookingsPage() {
         </div>
       )}
 
-      {/* Pagination */}
       {data && data.totalPages > 1 && (
         <div className="flex justify-center gap-2 pt-2">
           <button

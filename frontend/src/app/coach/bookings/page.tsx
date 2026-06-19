@@ -11,21 +11,9 @@ export default function PiPiBookingsPage() {
   const [upcomingPage, setUpcomingPage] = useState(1);
   const [pastPage, setPastPage] = useState(1);
 
-  const { data: pending, isLoading: loadingPending } = usePiPiBookings({
-    status: "PENDING",
-    page: pendingPage,
-    limit: 10,
-  });
-  const { data: upcoming, isLoading: loadingUpcoming } = usePiPiBookings({
-    status: "CONFIRMED",
-    page: upcomingPage,
-    limit: 10,
-  });
-  const { data: past, isLoading: loadingPast } = usePiPiBookings({
-    status: "COMPLETED",
-    page: pastPage,
-    limit: 10,
-  });
+  const { data: pending, isLoading: loadingPending } = usePiPiBookings({ status: "PENDING", page: pendingPage, limit: 10 });
+  const { data: upcoming, isLoading: loadingUpcoming } = usePiPiBookings({ status: "CONFIRMED", page: upcomingPage, limit: 10 });
+  const { data: past, isLoading: loadingPast } = usePiPiBookings({ status: "COMPLETED", page: pastPage, limit: 10 });
 
   const confirmBooking = useConfirmBooking();
   const cancelBooking = useCancelBooking();

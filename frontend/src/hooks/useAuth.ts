@@ -25,7 +25,7 @@ export function useAuth() {
     queryKey: QUERY_KEYS.ME,
     queryFn: authService.getMe,
     enabled: !!getAccessToken(),
-    placeholderData: getStoredUser() ?? undefined,
+    initialData: getStoredUser() ?? undefined,
     staleTime: 5 * 60 * 1000,
     retry: false,
   });

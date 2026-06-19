@@ -34,12 +34,16 @@ enum BookingStatus {
   PENDING
   CONFIRMED
   CANCELLED
+  COMPLETED
+  NO_SHOW
 }
 
 enum PaymentStatus {
   PENDING
-  SUCCESS
+  PAID
   FAILED
+  REFUNDED
+  CANCELLED
 }
 
 enum PaymentMethod {

@@ -64,7 +64,7 @@ export class PaymentRepository {
 
   async sumSuccessfulPayments(): Promise<number> {
     const result = await this.prisma.payment.aggregate({
-      where: { paymentStatus: PaymentStatus.SUCCESS },
+      where: { paymentStatus: PaymentStatus.PAID },
       _sum: { amount: true },
     });
     return Number(result._sum.amount) || 0;

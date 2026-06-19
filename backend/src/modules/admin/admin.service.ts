@@ -79,18 +79,18 @@ export class AdminService {
       this.prisma.booking.count({ where: { bookingStatus: BookingStatus.CANCELLED } }),
       this.prisma.booking.count({ where: { createdAt: { gte: startOfMonth } } }),
       this.prisma.payment.count(),
-      this.prisma.payment.count({ where: { paymentStatus: PaymentStatus.SUCCESS } }),
+      this.prisma.payment.count({ where: { paymentStatus: PaymentStatus.PAID } }),
       this.prisma.payment.count({ where: { paymentStatus: PaymentStatus.FAILED } }),
       this.prisma.payment.count({ where: { paymentStatus: PaymentStatus.PENDING } }),
       this.prisma.user.count({ where: { createdAt: { gte: startOfWeek } } }),
       this.prisma.booking.count({ where: { createdAt: { gte: startOfWeek } } }),
       this.prisma.payment.aggregate({
-        where: { paymentStatus: PaymentStatus.SUCCESS },
+        where: { paymentStatus: PaymentStatus.PAID },
         _sum: { amount: true },
       }),
       this.prisma.payment.aggregate({
         where: {
-          paymentStatus: PaymentStatus.SUCCESS,
+          paymentStatus: PaymentStatus.PAID,
           createdAt: { gte: startOfMonth },
         },
         _sum: { amount: true },

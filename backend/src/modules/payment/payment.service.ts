@@ -43,7 +43,7 @@ export class PaymentService {
     }
 
     const existing = await this.paymentRepository.findByBookingId(dto.bookingId);
-    if (existing && existing.paymentStatus === PaymentStatus.SUCCESS) {
+    if (existing && existing.paymentStatus === PaymentStatus.PAID) {
       throw new PaymentAlreadyProcessedException();
     }
 
@@ -114,7 +114,7 @@ export class PaymentService {
 
     // RtnCode 1 = success
     const isSuccess = dto.RtnCode === '1';
-    const newStatus = isSuccess ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
+    const newStatus = isSuccess ? PaymentStatus.PAID : PaymentStatus.FAILED;
 
     await this.paymentRepository.updateByEcpayTradeNo(
       dto.MerchantTradeNo,

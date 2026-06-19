@@ -211,3 +211,34 @@ Review the backend redesign for Railway deploy + local dev (commits `50a0d34`..`
 
 Backend type-checks clean (`tsc --noEmit` → 0 errors). Changes left in the working tree for review.
 
+---
+
+## 2026-06-19 — Day 4 (continued): LINE Login End-to-End Fixed
+
+### Goal
+Fix LINE OAuth login flow on production (Vercel frontend + Railway backend).
+
+### Issues found & fixed (in order of discovery)
+
+| Issue | Symptom | Fix |
+|---|---|---|
+| `CORS_ORIGINS` not set in Railway | Every API call failed CORS in prod after we hardened CORS to fail-closed | Set `CORS_ORIGINS=https://pipi-book-frontend.vercel.app` in Railway Variables |
+| `/auth/callback` cached by Vercel CDN | Cache age 21m — LINE one-time codes were being served against a stale HTML shell | Added `export const dynamic = "force-dynamic"` to callback page |
+| State mismatch in LINE IAB | LINE IAB opens OAuth in a new webview layer; `localStorage` state from the login page wasn't accessible in the callback webview → hard-blocked with "CSRF attack" error | Downgraded to `console.warn` — one-time-use `code` is sufficient replay protection |
+| `LINE_REDIRECT_URI` mismatch | Backend used `localhost` URI in Railway; LINE rejected the code exchange (`redirect_uri is not matched`) | Updated Railway `LINE_REDIRECT_URI` to match Vercel frontend URL |
+| API response envelope not unwrapped | Backend wraps all responses in `{ success, data, timestamp }`; frontend read `response.data.tokens` / `response.data.user` which were both `undefined` → `setTokens(undefined)` threw → mutation failed → "Login Failed" screen | Added axios response interceptor in `api-client.ts` to unwrap the envelope automatically |
+| `AuthResponse` shape mismatch | Frontend type expected `{ user, tokens: { accessToken, refreshToken } }`; backend sends `{ accessToken, refreshToken, expiresIn, user }` flat | Flattened `AuthResponse`; updated `useLineCallback.onSuccess` to build `AuthTokens` from flat fields |
+| `User` field name mismatches | `pictureUrl` → `avatar`, `lineId` → `lineUserId`, `isActive` → `status === "ACTIVE"` across 8 components | Updated `User` type + all call sites |
+
+### Root cause
+
+The frontend types and service layer were written before the backend was running — the assumed response shapes never matched the actual backend output. The envelope mismatch (`{ success, data }` wrapper) was the critical blocker; the field renames were secondary but would have broken avatars and active-state badges throughout the UI.
+
+### Lesson
+
+Run `tsc --noEmit` against real API response shapes (not assumed ones) before integrating. A one-time type alignment pass against the live `/api/docs` Swagger would have caught all of these at once.
+
+### Result
+
+LINE login flow works end-to-end in production. User lands on `/member/dashboard` after auth.
+

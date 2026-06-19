@@ -18,12 +18,17 @@ export function getRefreshToken(): string | null {
 export function setTokens(tokens: AuthTokens): void {
   localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokens.accessToken);
   localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokens.refreshToken);
+  // Mirror the access token in a cookie so the Edge middleware can read it.
+  const maxAge = tokens.expiresIn ?? 900;
+  document.cookie = `cb_access_token=${tokens.accessToken}; path=/; max-age=${maxAge}; SameSite=Lax`;
 }
 
 export function clearTokens(): void {
   localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
   localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
   localStorage.removeItem(STORAGE_KEYS.USER);
+  // Clear the middleware cookie too.
+  document.cookie = "cb_access_token=; path=/; max-age=0";
 }
 
 // ─── User Storage ─────────────────────────────────────────────────────────────

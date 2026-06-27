@@ -350,3 +350,35 @@ and drops the slot `date` column.
 ### Result
 Both apps type-check clean. Coach can manage services and open availability; booking calendar loads
 slots. (Earlier Day-5 instruction to run `migrate deploy` was wrong for this project — use `db push`.)
+
+---
+
+## 2026-06-27 — Day 5 (continued): Add missing GET/PATCH /auth/me
+
+### Symptom
+"Become a Coach" showed "Failed to create your coach profile" — but `POST /coaches`
+returned `201` and the coaches row existed. DevTools showed the real failure:
+`GET /api/v1/auth/me` → `404 Not Found`.
+
+### Root cause
+The backend auth controller never implemented `GET /auth/me` (or `PATCH /auth/me`).
+The frontend has always called `authService.getMe()` / `updateProfile()` assuming they
+exist. Normally the 404 is swallowed — `useAuth` falls back to the stored user from the
+login response with `retry:false` — but the onboarding flow `await`s `getMe()` directly,
+so the 404 turned a successful creation into a failure. Same class of bug as the rest of
+the session: frontend built against endpoints that were never implemented.
+
+### Fix (backend only, no schema change)
+- Added `GET /auth/me` → returns current user in the client `User` shape.
+- Added `PATCH /auth/me` → profile update (displayName/email/phone); extended
+  AuthRepository.updateUser to accept phone.
+- Hardened `useCreateCoachProfile`: after `POST /coaches` succeeds, the refresh + getMe
+  steps are best-effort (try/catch) so a follow-up hiccup never reports a created profile
+  as "failed".
+
+### Side effect noted
+This also fixes app-wide silent 404s on `/auth/me` — the logged-in user now actually
+refreshes from the server instead of running off the login-time stored copy.
+
+### Deploy
+Backend code change only — redeploy (git push → Railway). No `prisma db push` needed.

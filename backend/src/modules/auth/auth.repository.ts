@@ -25,7 +25,7 @@ export class AuthRepository {
 
   async updateUser(
     id: string,
-    data: Partial<{ displayName: string; avatar: string; email: string }>,
+    data: Partial<{ displayName: string; avatar: string; email: string; phone: string }>,
   ): Promise<User> {
     return this.prisma.user.update({ where: { id }, data });
   }

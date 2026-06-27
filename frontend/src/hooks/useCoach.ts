@@ -24,18 +24,32 @@ export function useCreateCoachProfile() {
 
   return useMutation({
     mutationFn: async (payload: CreateCoachProfilePayload) => {
+      // Creation is the only step that may legitimately fail; once it succeeds
+      // the profile + COACH role exist, so the follow-up steps are best-effort
+      // and must not surface as "failed to create".
       await coachService.createCoachProfile(payload);
 
+      // Refresh so the cookie JWT reflects the new COACH role (the edge
+      // middleware reads it before /coach/* renders).
       const refreshToken = getRefreshToken();
       if (refreshToken) {
-        const { accessToken, expiresIn } = await authService.refreshToken(refreshToken);
-        setTokens({ accessToken, expiresIn });
+        try {
+          const { accessToken, expiresIn } = await authService.refreshToken(refreshToken);
+          setTokens({ accessToken, expiresIn });
+        } catch {
+          /* token refresh hiccup — middleware will refresh on next request */
+        }
       }
 
-      const user = await authService.getMe();
-      setStoredUser(user);
-      queryClient.setQueryData(QUERY_KEYS.ME, user);
-      return user;
+      try {
+        const user = await authService.getMe();
+        setStoredUser(user);
+        queryClient.setQueryData(QUERY_KEYS.ME, user);
+      } catch {
+        // Non-fatal: the profile was created; just drop the stale ME cache so
+        // it refetches with the new role.
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
+      }
     },
     onSuccess: () => {
       router.push("/coach/dashboard");

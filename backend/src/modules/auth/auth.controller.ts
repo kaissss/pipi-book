@@ -1,6 +1,8 @@
 import {
   Controller,
   Post,
+  Get,
+  Patch,
   Body,
   HttpCode,
   HttpStatus,
@@ -11,6 +13,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LineLoginDto, RefreshTokenDto } from './dto/line-login.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
 
@@ -35,6 +38,23 @@ export class AuthController {
   async refresh(@Req() req: any, @Body() dto: RefreshTokenDto) {
     const { sub } = req.user;
     return this.authService.refreshAccessToken(sub, dto.refreshToken);
+  }
+
+  @Get('me')
+  @ApiBearerAuth('JWT')
+  @ApiOperation({ summary: 'Get the current authenticated user' })
+  async getMe(@CurrentUser() user: CurrentUserPayload) {
+    return this.authService.getMe(user.sub);
+  }
+
+  @Patch('me')
+  @ApiBearerAuth('JWT')
+  @ApiOperation({ summary: 'Update the current user profile' })
+  async updateProfile(
+    @CurrentUser() user: CurrentUserPayload,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.authService.updateProfile(user.sub, dto);
   }
 
   @Post('logout')

@@ -92,6 +92,42 @@ export class AuthService {
     return { accessToken, expiresIn };
   }
 
+  async getMe(userId: string) {
+    const user = await this.authRepository.findUserById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return this.toUserResponse(user);
+  }
+
+  async updateProfile(
+    userId: string,
+    data: Partial<{ displayName: string; email: string; phone: string }>,
+  ) {
+    const user = await this.authRepository.updateUser(userId, {
+      ...(data.displayName !== undefined && { displayName: data.displayName }),
+      ...(data.email !== undefined && { email: data.email }),
+      ...(data.phone !== undefined && { phone: data.phone }),
+    });
+    this.logger.log({ message: 'Profile updated', userId });
+    return this.toUserResponse(user);
+  }
+
+  private toUserResponse(user: User) {
+    return {
+      id: user.id,
+      lineUserId: user.lineUserId ?? '',
+      displayName: user.displayName ?? '',
+      avatar: user.avatar ?? undefined,
+      email: user.email ?? undefined,
+      phone: user.phone ?? undefined,
+      role: user.role,
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
   async logout(userId: string, refreshToken?: string): Promise<void> {
     if (refreshToken) {
       await this.authRepository.deleteRefreshToken(refreshToken).catch(() => {});

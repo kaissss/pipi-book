@@ -3,25 +3,39 @@ import {
   IsNotEmpty,
   IsOptional,
   IsNumber,
+  IsInt,
   IsBoolean,
+  IsEnum,
   Min,
   MaxLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { ServiceType } from '@prisma/client';
 
 export class CreateServiceDto {
-  @ApiProperty({ description: 'Service title' })
+  @ApiProperty({ description: 'Service name' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
-  title: string;
+  name: string;
+
+  @ApiProperty({ description: 'Service description', required: false })
+  @IsString()
+  @IsOptional()
+  @MaxLength(1000)
+  description?: string;
+
+  @ApiProperty({ enum: ServiceType, required: false, default: ServiceType.ONE_ON_ONE })
+  @IsEnum(ServiceType)
+  @IsOptional()
+  type?: ServiceType;
 
   @ApiProperty({ description: 'Duration in minutes' })
-  @IsNumber()
+  @IsInt()
   @Min(15)
   @Type(() => Number)
-  duration: number;
+  durationMinutes: number;
 
   @ApiProperty({ description: 'Price in TWD' })
   @IsNumber({ maxDecimalPlaces: 2 })
@@ -29,11 +43,18 @@ export class CreateServiceDto {
   @Type(() => Number)
   price: number;
 
-  @ApiProperty({ description: 'Service description', required: false })
+  @ApiProperty({ description: 'Currency code', required: false, default: 'TWD' })
   @IsString()
   @IsOptional()
-  @MaxLength(1000)
-  description?: string;
+  @MaxLength(10)
+  currency?: string;
+
+  @ApiProperty({ description: 'Max participants', required: false, default: 1 })
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  @Type(() => Number)
+  maxParticipants?: number;
 
   @ApiProperty({ description: 'Whether service is active', required: false, default: true })
   @IsBoolean()

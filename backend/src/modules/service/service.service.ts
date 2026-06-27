@@ -8,6 +8,7 @@ import { ServiceRepository } from './service.repository';
 import { CoachRepository } from '../coach/coach.repository';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { ServiceResponseDto } from './dto/service-response.dto';
+import { mapService } from '../coach/coach.service';
 
 @Injectable()
 export class ServiceService {
@@ -26,16 +27,18 @@ export class ServiceService {
     if (!coach) {
       throw new NotFoundException('Coach profile not found. Create a coach profile first.');
     }
-    if (!coach.isApproved) {
-      throw new ForbiddenException('Coach profile must be approved before creating services');
-    }
 
+    // A coach can set up services while still PENDING approval — public
+    // visibility is gated elsewhere by the coach's status, not here.
     const service = await this.serviceRepository.create({
       coach: { connect: { id: coach.id } },
-      title: dto.title,
-      duration: dto.duration,
+      name: dto.name,
+      description: dto.description ?? '',
+      type: dto.type,
+      durationMinutes: dto.durationMinutes,
       price: dto.price,
-      description: dto.description,
+      currency: dto.currency ?? 'TWD',
+      maxParticipants: dto.maxParticipants ?? 1,
       isActive: dto.isActive ?? true,
     });
 
@@ -45,7 +48,7 @@ export class ServiceService {
       coachId: coach.id,
     });
 
-    return this.toResponseDto(service);
+    return mapService(service);
   }
 
   async getService(serviceId: string): Promise<ServiceResponseDto> {
@@ -53,7 +56,7 @@ export class ServiceService {
     if (!service) {
       throw new NotFoundException(`Service ${serviceId} not found`);
     }
-    return this.toResponseDto(service);
+    return mapService(service);
   }
 
   async getCoachServices(
@@ -65,11 +68,8 @@ export class ServiceService {
       throw new NotFoundException(`Coach ${coachId} not found`);
     }
 
-    const services = await this.serviceRepository.findByCoachId(
-      coachId,
-      activeOnly,
-    );
-    return services.map(this.toResponseDto);
+    const services = await this.serviceRepository.findByCoachId(coachId, activeOnly);
+    return services.map(mapService);
   }
 
   async updateService(
@@ -88,15 +88,18 @@ export class ServiceService {
     }
 
     const updated = await this.serviceRepository.update(serviceId, {
-      ...(dto.title && { title: dto.title }),
-      ...(dto.duration !== undefined && { duration: dto.duration }),
-      ...(dto.price !== undefined && { price: dto.price }),
+      ...(dto.name && { name: dto.name }),
       ...(dto.description !== undefined && { description: dto.description }),
+      ...(dto.type && { type: dto.type }),
+      ...(dto.durationMinutes !== undefined && { durationMinutes: dto.durationMinutes }),
+      ...(dto.price !== undefined && { price: dto.price }),
+      ...(dto.currency && { currency: dto.currency }),
+      ...(dto.maxParticipants !== undefined && { maxParticipants: dto.maxParticipants }),
       ...(dto.isActive !== undefined && { isActive: dto.isActive }),
     });
 
     this.logger.log({ message: 'Service updated', serviceId });
-    return this.toResponseDto(updated);
+    return mapService(updated);
   }
 
   async deleteService(userId: string, serviceId: string): Promise<void> {
@@ -112,18 +115,5 @@ export class ServiceService {
 
     await this.serviceRepository.softDelete(serviceId);
     this.logger.log({ message: 'Service deactivated', serviceId });
-  }
-
-  private toResponseDto(service: any): ServiceResponseDto {
-    return {
-      id: service.id,
-      coachId: service.coachId,
-      title: service.title,
-      duration: service.duration,
-      price: Number(service.price),
-      description: service.description,
-      isActive: service.isActive,
-      createdAt: service.createdAt,
-    };
   }
 }

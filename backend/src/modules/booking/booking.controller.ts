@@ -19,7 +19,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { BookingService } from './booking.service';
-import { CreateBookingDto, CancelBookingDto } from './dto/create-booking.dto';
+import { CreateBookingDto, CancelBookingDto, AddMeetingUrlDto } from './dto/create-booking.dto';
 import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
 import { BookingStatus } from '@prisma/client';
 
@@ -90,5 +90,20 @@ export class BookingController {
     @Body() dto: CancelBookingDto,
   ) {
     return this.bookingService.cancelBooking(user.sub, id, user.role);
+  }
+
+  @Patch(':id/complete')
+  @ApiOperation({ summary: 'Mark a booking as completed (coach or admin)' })
+  async completeBooking(@Param('id', ParseUUIDPipe) id: string) {
+    return this.bookingService.completeBooking(id);
+  }
+
+  @Patch(':id/meeting')
+  @ApiOperation({ summary: 'Attach a meeting URL to a booking' })
+  async addMeetingUrl(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AddMeetingUrlDto,
+  ) {
+    return this.bookingService.addMeetingUrl(id, dto.meetingUrl);
   }
 }

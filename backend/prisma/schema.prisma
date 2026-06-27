@@ -21,7 +21,20 @@ enum Role {
 enum UserStatus {
   ACTIVE
   INACTIVE
-  BANNED
+  SUSPENDED
+}
+
+enum CoachStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ServiceType {
+  ONE_ON_ONE
+  GROUP
+  WORKSHOP
 }
 
 enum SlotStatus {
@@ -95,16 +108,19 @@ model RefreshToken {
 }
 
 model Coach {
-  id             String   @id @default(uuid())
-  userId         String   @unique @map("user_id")
-  nickname       String
-  introduction   String?
-  experience     String?
+  id             String      @id @default(uuid())
+  userId         String      @unique @map("user_id")
+  bio            String      @default("")
+  specialties    String[]
+  experience     Int         @default(0)
+  status         CoachStatus @default(PENDING)
+  timezone       String      @default("Asia/Taipei")
+  location       String?
+  languages      String[]
   certifications String[]
-  hourlyPrice    Decimal  @map("hourly_price") @db.Decimal(10, 2)
-  isApproved     Boolean  @default(false) @map("is_approved")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  coverImageUrl  String?     @map("cover_image_url")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
 
   user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   services  Service[]
@@ -115,15 +131,18 @@ model Coach {
 }
 
 model Service {
-  id          String   @id @default(uuid())
-  coachId     String   @map("coach_id")
-  title       String
-  duration    Int
-  price       Decimal  @db.Decimal(10, 2)
-  description String?
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id              String      @id @default(uuid())
+  coachId         String      @map("coach_id")
+  name            String
+  description     String      @default("")
+  type            ServiceType @default(ONE_ON_ONE)
+  durationMinutes Int         @map("duration_minutes")
+  price           Decimal     @db.Decimal(10, 2)
+  currency        String      @default("TWD")
+  maxParticipants Int         @default(1) @map("max_participants")
+  isActive        Boolean     @default(true) @map("is_active")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
 
   coach    Coach     @relation(fields: [coachId], references: [id], onDelete: Cascade)
   bookings Booking[]
@@ -155,6 +174,8 @@ model Booking {
   serviceId     String        @map("service_id")
   slotId        String        @unique @map("slot_id")
   bookingStatus BookingStatus @default(PENDING) @map("booking_status")
+  notes         String?
+  meetingUrl    String?       @map("meeting_url")
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
 

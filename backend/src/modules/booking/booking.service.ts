@@ -10,6 +10,7 @@ import { AvailabilityRepository } from '../availability/availability.repository'
 import { BookingRedisLockService } from './booking.redis-lock.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { BookingResponseDto } from './dto/booking-response.dto';
+import { mapService } from '../coach/coach.service';
 import {
   BookingSlotUnavailableException,
   BookingSlotLockedException,
@@ -84,11 +85,14 @@ export class BookingService {
             service: { connect: { id: dto.serviceId } },
             slot: { connect: { id: dto.slotId } },
             bookingStatus: BookingStatus.PENDING,
+            notes: dto.notes,
           },
           include: {
-            service: { select: { title: true, duration: true, price: true } },
-            slot: { select: { date: true, startTime: true, endTime: true } },
-            coach: { select: { nickname: true, userId: true } },
+            member: true,
+            service: true,
+            slot: true,
+            coach: { include: { user: true, services: true } },
+            payment: true,
           },
         });
       });
@@ -233,38 +237,133 @@ export class BookingService {
     };
   }
 
+  async getRecentBookings(limit = 10): Promise<BookingResponseDto[]> {
+    const bookings = await this.bookingRepository.findRecent(limit);
+    return bookings.map((booking) => this.toResponseDto(booking));
+  }
+
+  async completeBooking(bookingId: string): Promise<BookingResponseDto> {
+    const booking = await this.bookingRepository.findById(bookingId);
+    if (!booking) {
+      throw new BookingNotFoundException(bookingId);
+    }
+    await this.bookingRepository.updateStatus(bookingId, BookingStatus.COMPLETED);
+    this.logger.log({ message: 'Booking completed', bookingId });
+    const updated = await this.bookingRepository.findById(bookingId);
+    return this.toResponseDto(updated);
+  }
+
+  async addMeetingUrl(
+    bookingId: string,
+    meetingUrl: string,
+  ): Promise<BookingResponseDto> {
+    const booking = await this.bookingRepository.findById(bookingId);
+    if (!booking) {
+      throw new BookingNotFoundException(bookingId);
+    }
+    const updated = await this.bookingRepository.update(bookingId, { meetingUrl });
+    this.logger.log({ message: 'Booking meeting URL set', bookingId });
+    return this.toResponseDto(updated);
+  }
+
   private toResponseDto(booking: any): BookingResponseDto {
     return {
       id: booking.id,
-      memberId: booking.memberId,
+      studentId: booking.memberId,
       coachId: booking.coachId,
       serviceId: booking.serviceId,
       slotId: booking.slotId,
-      bookingStatus: booking.bookingStatus,
+      status: booking.bookingStatus,
+      notes: booking.notes ?? undefined,
+      meetingUrl: booking.meetingUrl ?? undefined,
       createdAt: booking.createdAt,
-      service: booking.service
-        ? {
-            title: booking.service.title,
-            duration: booking.service.duration,
-            price: Number(booking.service.price),
-          }
-        : undefined,
-      slot: booking.slot
-        ? {
-            date: booking.slot.date instanceof Date
-              ? booking.slot.date.toISOString().split('T')[0]
-              : booking.slot.date,
-            startTime: booking.slot.startTime instanceof Date
-              ? `${booking.slot.startTime.getHours().toString().padStart(2, '0')}:${booking.slot.startTime.getMinutes().toString().padStart(2, '0')}`
-              : booking.slot.startTime,
-            endTime: booking.slot.endTime instanceof Date
-              ? `${booking.slot.endTime.getHours().toString().padStart(2, '0')}:${booking.slot.endTime.getMinutes().toString().padStart(2, '0')}`
-              : booking.slot.endTime,
-          }
-        : undefined,
+      updatedAt: booking.updatedAt,
+      student: booking.member ? mapUser(booking.member) : undefined,
       coach: booking.coach
-        ? { nickname: booking.coach.nickname, userId: booking.coach.userId }
+        ? {
+            id: booking.coach.id,
+            userId: booking.coach.userId,
+            bio: booking.coach.bio,
+            specialties: booking.coach.specialties,
+            experience: booking.coach.experience,
+            rating: 0,
+            reviewCount: 0,
+            status: booking.coach.status,
+            timezone: booking.coach.timezone,
+            location: booking.coach.location ?? undefined,
+            languages: booking.coach.languages,
+            certifications: booking.coach.certifications,
+            coverImageUrl: booking.coach.coverImageUrl ?? undefined,
+            services: (booking.coach.services ?? []).map(mapService),
+            createdAt: booking.coach.createdAt,
+            updatedAt: booking.coach.updatedAt,
+            user: booking.coach.user ? mapUser(booking.coach.user) : undefined,
+          }
         : undefined,
+      service: booking.service ? mapService(booking.service) : undefined,
+      slot: booking.slot ? mapSlot(booking.slot) : undefined,
+      payment: booking.payment ? mapPayment(booking.payment) : undefined,
     };
   }
+}
+
+function mapUser(user: any) {
+  return {
+    id: user.id,
+    lineUserId: user.lineUserId ?? '',
+    displayName: user.displayName ?? '',
+    avatar: user.avatar ?? undefined,
+    email: user.email ?? undefined,
+    phone: user.phone ?? undefined,
+    role: user.role,
+    status: user.status,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+}
+
+// Compose the slot's stored date + time columns into a single ISO datetime,
+// which is what the client expects for AvailabilitySlot.startTime/endTime.
+function composeIso(date: Date, time: Date): string {
+  const d = new Date(date);
+  const t = new Date(time);
+  return new Date(
+    Date.UTC(
+      d.getUTCFullYear(),
+      d.getUTCMonth(),
+      d.getUTCDate(),
+      t.getUTCHours(),
+      t.getUTCMinutes(),
+    ),
+  ).toISOString();
+}
+
+const SLOT_STATUS_MAP: Record<string, string> = {
+  OPEN: 'AVAILABLE',
+  LOCKED: 'AVAILABLE',
+  BOOKED: 'BOOKED',
+};
+
+function mapSlot(slot: any) {
+  return {
+    id: slot.id,
+    coachId: slot.coachId,
+    startTime: composeIso(slot.date, slot.startTime),
+    endTime: composeIso(slot.date, slot.endTime),
+    status: SLOT_STATUS_MAP[slot.status] ?? slot.status,
+  };
+}
+
+function mapPayment(payment: any) {
+  return {
+    id: payment.id,
+    bookingId: payment.bookingId,
+    amount: Number(payment.amount),
+    currency: 'TWD',
+    method: payment.paymentMethod,
+    status: payment.paymentStatus,
+    ecpayTradeNo: payment.ecpayTradeNo ?? undefined,
+    createdAt: payment.createdAt,
+    updatedAt: payment.updatedAt,
+  };
 }

@@ -1,9 +1,47 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { coachService, type UpdateCoachProfilePayload } from "@/services/coach.service";
+import { useRouter } from "next/navigation";
+import {
+  coachService,
+  type UpdateCoachProfilePayload,
+  type CreateCoachProfilePayload,
+} from "@/services/coach.service";
+import { authService } from "@/services/auth.service";
+import { getRefreshToken, setTokens, setStoredUser } from "@/lib/auth";
 import { QUERY_KEYS } from "@/lib/constants";
 import type { CoachFilters, Service } from "@/types";
+
+/**
+ * Become a coach. After the profile is created the user's role is COACH in the
+ * database, but the JWT in the cookie still says STUDENT — so we refresh the
+ * access token (which re-reads the role) before navigating into the coach
+ * portal, otherwise the edge middleware would bounce the request back.
+ */
+export function useCreateCoachProfile() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (payload: CreateCoachProfilePayload) => {
+      await coachService.createCoachProfile(payload);
+
+      const refreshToken = getRefreshToken();
+      if (refreshToken) {
+        const { accessToken, expiresIn } = await authService.refreshToken(refreshToken);
+        setTokens({ accessToken, expiresIn });
+      }
+
+      const user = await authService.getMe();
+      setStoredUser(user);
+      queryClient.setQueryData(QUERY_KEYS.ME, user);
+      return user;
+    },
+    onSuccess: () => {
+      router.push("/coach/dashboard");
+    },
+  });
+}
 
 export function useCoaches(filters: CoachFilters = {}) {
   return useQuery({

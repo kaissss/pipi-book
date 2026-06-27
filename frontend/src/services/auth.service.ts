@@ -17,8 +17,12 @@ export const authService = {
     return data;
   },
 
-  async refreshToken(refreshToken: string): Promise<{ tokens: { accessToken: string; refreshToken: string; expiresIn: number } }> {
-    const { data } = await apiClient.post("/auth/refresh", { refreshToken });
+  // Backend returns only a fresh access token (the refresh token is unchanged).
+  async refreshToken(refreshToken: string): Promise<{ accessToken: string; expiresIn: number }> {
+    const { data } = await apiClient.post<{ accessToken: string; expiresIn: number }>(
+      "/auth/refresh",
+      { refreshToken }
+    );
     return data;
   },
 

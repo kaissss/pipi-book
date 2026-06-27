@@ -24,7 +24,7 @@ export default function Footer() {
             <h4 className="text-sm font-semibold mb-3">Platform</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link href="/coaches" className="hover:text-foreground transition-colors">Find Coaches</Link></li>
-              <li><Link href="/auth/login" className="hover:text-foreground transition-colors">Become a Coach</Link></li>
+              <li><Link href="/member/become-coach" className="hover:text-foreground transition-colors">Become a Coach</Link></li>
               <li><Link href="/#how-it-works" className="hover:text-foreground transition-colors">How it Works</Link></li>
             </ul>
           </div>

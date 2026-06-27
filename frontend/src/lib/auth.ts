@@ -15,9 +15,15 @@ export function getRefreshToken(): string | null {
   return localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
 }
 
-export function setTokens(tokens: AuthTokens): void {
+export function setTokens(
+  tokens: { accessToken: string; refreshToken?: string; expiresIn?: number },
+): void {
   localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokens.accessToken);
-  localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokens.refreshToken);
+  // The refresh endpoint only returns a new access token. Preserve the existing
+  // refresh token when none is provided instead of overwriting it with undefined.
+  if (tokens.refreshToken) {
+    localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokens.refreshToken);
+  }
   // Mirror the access token in a cookie so the Edge middleware can read it.
   const maxAge = tokens.expiresIn ?? 900;
   document.cookie = `cb_access_token=${tokens.accessToken}; path=/; max-age=${maxAge}; SameSite=Lax`;

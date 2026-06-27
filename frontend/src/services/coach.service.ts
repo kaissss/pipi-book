@@ -11,7 +11,24 @@ export interface UpdateCoachProfilePayload {
   certifications?: string[];
 }
 
+// Matches the backend CreateCoachDto contract.
+export interface CreateCoachProfilePayload {
+  bio: string;
+  specialties?: string[];
+  experience?: number;
+  languages?: string[];
+  location?: string;
+  certifications?: string[];
+}
+
 export const coachService = {
+  // Become a coach: creates the coach profile and (server-side) promotes the
+  // current user to the COACH role.
+  async createCoachProfile(payload: CreateCoachProfilePayload): Promise<Coach> {
+    const { data } = await apiClient.post<Coach>("/coaches", payload);
+    return data;
+  },
+
   async listCoaches(filters: CoachFilters = {}): Promise<PaginatedResponse<Coach>> {
     const { data } = await apiClient.get<PaginatedResponse<Coach>>("/coaches", {
       params: filters,

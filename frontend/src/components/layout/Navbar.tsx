@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { Menu, X, BookOpen, User, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, BookOpen, User, LogOut, LayoutDashboard, GraduationCap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { APP_NAME } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout, isCoach, isAdmin } = useAuth();
+  const { user, isAuthenticated, logout, isCoach, isAdmin, isStudent } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   function getDashboardHref() {
@@ -83,6 +83,14 @@ export default function Navbar() {
                     Profile
                   </Link>
                 </DropdownMenuItem>
+                {isStudent && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/member/become-coach" className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      Become a Coach
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={logout}

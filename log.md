@@ -268,3 +268,47 @@ document.cookie = `cb_access_token=${tokens.accessToken}; path=/; max-age=${maxA
 
 Post-login redirect to `/member/dashboard` succeeds. Middleware reads the cookie, verifies the JWT payload (role + expiry), and allows the navigation.
 
+
+---
+
+## 2026-06-27 — Day 5: "Become a Coach" + API Contract Reconciliation
+
+### Part 1 — Students couldn't become coaches
+
+**Symptom:** Logged-in student clicks "as coach" → never reaches the coach portal.
+
+**Root cause:** `POST /coaches` created a `Coach` row but never promoted `user.role` from `STUDENT` to `COACH`. Every access gate (Edge middleware `proxy.ts`, `useAuth().isCoach`) keys off the role, so a student was permanently locked out. There was also no onboarding UI — "Start as Coach" just linked to `/auth/login`.
+
+**Fix:**
+- `coach.repository.createWithRolePromotion()` — creates the profile AND promotes the user to `COACH` in one `$transaction` (no half-applied state).
+- New `/member/become-coach` onboarding form (lives under `/member` so the middleware lets a student in).
+- `useCreateCoachProfile` refreshes the access token after creation (the cookie JWT still said `STUDENT` until re-issued — otherwise middleware bounces the request back), refetches `/auth/me`, then routes to `/coach/dashboard`.
+- Fixed a latent bug: `setTokens()` was overwriting the refresh token with `undefined` on access-only refreshes (also affected the auto-refresh interceptor).
+- Wired entry points: home, footer, and a Navbar item for students.
+
+### Part 2 — The contract drift was systemic (whole API)
+
+Investigating the coach-profile field mismatch revealed the entire frontend was built against an *imagined* API: `Coach`, `Service`, `Booking`, `Payment`, and the whole admin surface diverged from the backend. The booking list pages were **already broken at runtime** (`BookingCard` reads `booking.coach.user`, `booking.student`, `booking.service.name`, `booking.payment` — none of which the backend returned).
+
+**Decision:** Extend the backend to match the frontend types (Phase A + B), done verifiably.
+
+**Done (compiles clean, both apps):**
+- **Coach** — `bio, specialties[], experience(int), status, timezone, location, languages, certifications, coverImageUrl, services[]` + `rating`/`reviewCount` placeholders. `isApproved` Boolean → `status` `CoachStatus` enum.
+- **Service** — `title`→`name`, `duration`→`durationMinutes`, added `type`/`currency`/`maxParticipants`.
+- **Booking response** — reshaped to the client contract: `student`, `coach.user`, full `service`, ISO `slot.startTime`, `payment`, `status`, `notes`, `meetingUrl`. Added `/bookings/:id/complete` and `/bookings/:id/meeting`.
+- **Admin (Phase B)** — `GET /admin/coaches?status`, approve/reject/suspend, `users/:id/suspend|activate`, `GET /admin/bookings/recent`, flat `PlatformStats`. `UserStatus` `BANNED`→`SUSPENDED`.
+- Coach `PUT /coaches/me` → `PATCH` to match the frontend.
+- Migration `20260627120000_extend_coach_service_booking` (preserves `is_approved`→`status`; renames service columns; drops `nickname`/`introduction`/`hourly_price`, retypes `experience`).
+
+**Still mismatched (deferred — booking-creation/scheduling flows):** path differences only —
+- Coach services CRUD: frontend `/coaches/me/services` vs backend `/services`.
+- Availability/slots: frontend `/coaches/me/slots`, `/coaches/:id/availability` vs backend `/availability/*` (booking calendar won't load slots).
+- Payment init: not yet verified against `usePayment`.
+
+### Root cause / lesson
+
+Same as the LINE-login saga: frontend types hand-written speculatively with no shared contract. The durable fix is to generate the frontend API types from the backend's NestJS Swagger/OpenAPI so the two can't drift. Until then, every integration needs a type-alignment pass against the live API.
+
+### Migration note
+
+Apply before restarting the backend: `cd backend && npx prisma migrate deploy`. Railway applies it on deploy automatically.

@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Patch,
   Body,
   Param,
@@ -21,9 +20,7 @@ import { CoachService } from './coach.service';
 import { CreateCoachDto } from './dto/create-coach.dto';
 import { UpdateCoachDto } from './dto/update-coach.dto';
 import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
-import { Role } from '../../common/constants/roles.constant';
 
 @ApiTags('Coach')
 @ApiBearerAuth('JWT')
@@ -66,19 +63,12 @@ export class CoachController {
     return this.coachService.getProfile(id);
   }
 
-  @Put('me')
+  @Patch('me')
   @ApiOperation({ summary: 'Update my coach profile' })
   async updateProfile(
     @CurrentUser() user: CurrentUserPayload,
     @Body() dto: UpdateCoachDto,
   ) {
     return this.coachService.updateProfile(user.sub, dto);
-  }
-
-  @Patch(':id/approve')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Approve a coach (admin only)' })
-  async approveCoach(@Param('id', ParseUUIDPipe) id: string) {
-    return this.coachService.approveCoach(id);
   }
 }

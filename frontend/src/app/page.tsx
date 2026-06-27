@@ -68,7 +68,7 @@ export default function HomePage() {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="text-base">
-                <Link href="/auth/login">Start as Coach</Link>
+                <Link href="/member/become-coach">Start as Coach</Link>
               </Button>
             </div>
 

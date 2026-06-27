@@ -92,3 +92,6 @@ Thumbs.db
 # Uploads / generated files
 uploads/
 public/uploads/
+
+# Claude AI
+CLAUDE.md

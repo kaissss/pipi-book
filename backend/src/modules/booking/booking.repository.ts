@@ -4,9 +4,11 @@ import { Booking, BookingStatus, Prisma } from '@prisma/client';
 
 const bookingWithRelations = Prisma.validator<Prisma.BookingDefaultArgs>()({
   include: {
-    service: { select: { title: true, duration: true, price: true } },
-    slot: { select: { date: true, startTime: true, endTime: true } },
-    coach: { select: { nickname: true, userId: true } },
+    member: true,
+    service: true,
+    slot: true,
+    coach: { include: { user: true, services: true } },
+    payment: true,
   },
 });
 
@@ -76,11 +78,23 @@ export class BookingRepository {
     return this.prisma.booking.findUnique({ where: { slotId } });
   }
 
+  async findRecent(limit = 10): Promise<BookingWithRelations[]> {
+    return this.prisma.booking.findMany({
+      ...bookingWithRelations,
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
+
   async updateStatus(id: string, status: BookingStatus): Promise<Booking> {
     return this.prisma.booking.update({
       where: { id },
       data: { bookingStatus: status },
     });
+  }
+
+  async update(id: string, data: Prisma.BookingUpdateInput): Promise<BookingWithRelations> {
+    return this.prisma.booking.update({ where: { id }, data, ...bookingWithRelations });
   }
 
   async countByStatus(status?: BookingStatus): Promise<number> {

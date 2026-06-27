@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsUUID, IsOptional, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateBookingDto {
@@ -16,10 +16,25 @@ export class CreateBookingDto {
   @IsUUID()
   @IsNotEmpty()
   slotId: string;
+
+  @ApiProperty({ description: 'Notes for the coach', required: false })
+  @IsString()
+  @IsOptional()
+  @MaxLength(1000)
+  notes?: string;
 }
 
 export class CancelBookingDto {
   @ApiProperty({ description: 'Cancellation reason', required: false })
   @IsString()
+  @IsOptional()
   reason?: string;
+}
+
+export class AddMeetingUrlDto {
+  @ApiProperty({ description: 'Meeting URL' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
+  meetingUrl: string;
 }

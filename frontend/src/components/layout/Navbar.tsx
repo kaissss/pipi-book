@@ -1,11 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { useState } from "react";
-import { Menu, X, BookOpen, User, LogOut, LayoutDashboard, GraduationCap, Briefcase, Shield, CalendarDays } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  Menu,
+  X,
+  BookOpen,
+  User,
+  LogOut,
+  GraduationCap,
+  Briefcase,
+  Shield,
+  CalendarDays,
+  Repeat,
+  type LucideIcon,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { APP_NAME } from "@/lib/constants";
+import { APP_NAME, STORAGE_KEYS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,26 +28,49 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
+import type { UserRole } from "@/types";
+
+// What each role looks like in the nav, and where its dashboard/profile live.
+const ROLE_META: Record<UserRole, { label: string; dashboard: string; profile: string; icon: LucideIcon }> = {
+  ADMIN: { label: "Admin", dashboard: "/admin/dashboard", profile: "/member/profile", icon: Shield },
+  COACH: { label: "Coach", dashboard: "/coach/dashboard", profile: "/coach/profile", icon: Briefcase },
+  STUDENT: { label: "Member", dashboard: "/member/dashboard", profile: "/member/profile", icon: CalendarDays },
+};
+
+// The roles a person may act as. A coach/admin is also a member who can book.
+function availableRoles(role: UserRole): UserRole[] {
+  if (role === "ADMIN") return ["ADMIN", "STUDENT"];
+  if (role === "COACH") return ["COACH", "STUDENT"];
+  return ["STUDENT"];
+}
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout, isCoach, isAdmin, isStudent } = useAuth();
+  const { user, isAuthenticated, logout, isStudent } = useAuth();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  function getDashboardHref() {
-    if (isAdmin) return "/admin/dashboard";
-    if (isCoach) return "/coach/dashboard";
-    return "/member/dashboard";
-  }
+  // The role the user is currently acting as. Defaults to their assigned role
+  // and is remembered across navigations. Never exceeds their real privileges
+  // (it is clamped to availableRoles, all of which their JWT already grants).
+  const [activeRole, setActiveRole] = useState<UserRole | null>(null);
 
-  // Portals the current user can switch between. A coach (or admin) is also a
-  // member who can browse and book, so every authenticated user gets the member
-  // view in addition to any elevated portal they hold.
-  const portals: { label: string; href: string; icon: typeof LayoutDashboard }[] = [
-    ...(isAdmin ? [{ label: "Admin Dashboard", href: "/admin/dashboard", icon: Shield }] : []),
-    ...(isCoach ? [{ label: "Coach Portal", href: "/coach/dashboard", icon: Briefcase }] : []),
-    { label: "Member View", href: "/member/dashboard", icon: CalendarDays },
-  ];
-  const hasMultiplePortals = portals.length > 1;
+  useEffect(() => {
+    if (!user) return;
+    const allowed = availableRoles(user.role);
+    const stored = localStorage.getItem(STORAGE_KEYS.ACTIVE_ROLE) as UserRole | null;
+    setActiveRole(stored && allowed.includes(stored) ? stored : user.role);
+  }, [user]);
+
+  const effectiveRole: UserRole = activeRole ?? user?.role ?? "STUDENT";
+  const roles = user ? availableRoles(user.role) : [];
+  const meta = ROLE_META[effectiveRole];
+
+  function switchRole(role: UserRole) {
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_ROLE, role);
+    setActiveRole(role);
+    setMobileOpen(false);
+    router.push(ROLE_META[role].dashboard);
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -52,7 +87,7 @@ export default function Navbar() {
             Find Coaches
           </Link>
           {isAuthenticated && (
-            <Link href={getDashboardHref()} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Link href={meta.dashboard} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Dashboard
             </Link>
           )}
@@ -74,45 +109,31 @@ export default function Navbar() {
                 <div className="flex items-center gap-2 p-2">
                   <div className="flex flex-col space-y-0.5">
                     <p className="text-sm font-medium">{user.displayName}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{user.role.toLowerCase()}</p>
+                    <p className="text-xs text-muted-foreground">Viewing as {meta.label}</p>
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                {hasMultiplePortals && (
-                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                    Switch portal
-                  </div>
-                )}
-                {hasMultiplePortals ? (
-                  portals.map((portal) => {
-                    const Icon = portal.icon;
-                    return (
-                      <DropdownMenuItem asChild key={portal.href}>
-                        <Link href={portal.href} className="flex items-center gap-2">
-                          <Icon className="h-4 w-4" />
-                          {portal.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    );
-                  })
-                ) : (
-                  <DropdownMenuItem asChild>
-                    <Link href={getDashboardHref()} className="flex items-center gap-2">
-                      <LayoutDashboard className="h-4 w-4" />
-                      Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {hasMultiplePortals && <DropdownMenuSeparator />}
                 <DropdownMenuItem asChild>
-                  <Link
-                    href={isCoach ? "/coach/profile" : "/member/profile"}
-                    className="flex items-center gap-2"
-                  >
+                  <Link href={meta.dashboard} className="flex items-center gap-2">
+                    <meta.icon className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={meta.profile} className="flex items-center gap-2">
                     <User className="h-4 w-4" />
                     Profile
                   </Link>
                 </DropdownMenuItem>
+
+                {/* Real role switch — changes which role the menu/app reflects */}
+                {roles.filter((role) => role !== effectiveRole).map((role) => (
+                  <DropdownMenuItem key={role} onClick={() => switchRole(role)} className="flex items-center gap-2">
+                    <Repeat className="h-4 w-4" />
+                    Switch to {ROLE_META[role].label}
+                  </DropdownMenuItem>
+                ))}
+
                 {isStudent && (
                   <DropdownMenuItem asChild>
                     <Link href="/member/become-coach" className="flex items-center gap-2">
@@ -160,15 +181,21 @@ export default function Navbar() {
           </Link>
           {isAuthenticated ? (
             <>
-              {portals.map((portal) => (
-                <Link
-                  key={portal.href}
-                  href={portal.href}
-                  className="text-sm font-medium"
-                  onClick={() => setMobileOpen(false)}
+              <Link
+                href={meta.dashboard}
+                className="text-sm font-medium"
+                onClick={() => setMobileOpen(false)}
+              >
+                Dashboard
+              </Link>
+              {roles.filter((role) => role !== effectiveRole).map((role) => (
+                <button
+                  key={role}
+                  onClick={() => switchRole(role)}
+                  className="text-sm font-medium text-left"
                 >
-                  {hasMultiplePortals ? portal.label : "Dashboard"}
-                </Link>
+                  Switch to {ROLE_META[role].label}
+                </button>
               ))}
               {isStudent && (
                 <Link

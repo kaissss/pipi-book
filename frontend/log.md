@@ -24,3 +24,12 @@ JWT + guards) was considered and deferred as unnecessary for MVP.
 
 ### Deploy
 Frontend only — Vercel (git push). No backend, no db push.
+
+### Revision (per feedback): real active-role switch, not two menu items
+Reworked the above into a single role switch instead of listing two portals:
+- client-side `activeRole` persisted in localStorage (`cb_active_role`), clamped to
+  `availableRoles(role)` (ADMIN->[ADMIN,STUDENT], COACH->[COACH,STUDENT], STUDENT->[STUDENT]).
+- the Navbar renders for the ACTIVE role only ("Viewing as X"; Dashboard/Profile target that
+  role's pages); a single "Switch to {other role}" action changes activeRole, persists it,
+  and routes to that dashboard. Cleared on logout.
+- activeRole never exceeds real privileges; single `role` still governs access.

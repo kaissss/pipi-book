@@ -33,6 +33,7 @@ export function clearTokens(): void {
   localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
   localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
   localStorage.removeItem(STORAGE_KEYS.USER);
+  localStorage.removeItem(STORAGE_KEYS.ACTIVE_ROLE);
   // Clear the middleware cookie too.
   document.cookie = "cb_access_token=; path=/; max-age=0";
 }

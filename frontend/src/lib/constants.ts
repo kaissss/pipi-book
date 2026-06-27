@@ -16,6 +16,7 @@ export const STORAGE_KEYS = {
   REFRESH_TOKEN: "cb_refresh_token",
   USER: "cb_user",
   LINE_STATE: "cb_line_state",
+  ACTIVE_ROLE: "cb_active_role",
 } as const;
 
 export const QUERY_KEYS = {

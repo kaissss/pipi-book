@@ -37,9 +37,10 @@ const ROLE_META: Record<UserRole, { label: string; dashboard: string; profile: s
   STUDENT: { label: "Member", dashboard: "/member/dashboard", profile: "/member/profile", icon: CalendarDays },
 };
 
-// The roles a person may act as. A coach/admin is also a member who can book.
+// The roles a person may act as. An admin can view every portal; a coach is
+// also a member who can book.
 function availableRoles(role: UserRole): UserRole[] {
-  if (role === "ADMIN") return ["ADMIN", "STUDENT"];
+  if (role === "ADMIN") return ["ADMIN", "COACH", "STUDENT"];
   if (role === "COACH") return ["COACH", "STUDENT"];
   return ["STUDENT"];
 }
@@ -127,6 +128,7 @@ export default function Navbar() {
                 </DropdownMenuItem>
 
                 {/* Real role switch — changes which role the menu/app reflects */}
+                {roles.length > 1 && <DropdownMenuSeparator />}
                 {roles.filter((role) => role !== effectiveRole).map((role) => (
                   <DropdownMenuItem key={role} onClick={() => switchRole(role)} className="flex items-center gap-2">
                     <Repeat className="h-4 w-4" />

@@ -188,6 +188,13 @@ export default function Navbar() {
               >
                 Dashboard
               </Link>
+              <Link
+                href={meta.profile}
+                className="text-sm font-medium"
+                onClick={() => setMobileOpen(false)}
+              >
+                Profile
+              </Link>
               {roles.filter((role) => role !== effectiveRole).map((role) => (
                 <button
                   key={role}

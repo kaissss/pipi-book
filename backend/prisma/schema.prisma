@@ -153,9 +153,8 @@ model Service {
 model AvailableSlot {
   id          String     @id @default(uuid())
   coachId     String     @map("coach_id")
-  date        DateTime   @db.Date
-  startTime   DateTime   @map("start_time") @db.Time
-  endTime     DateTime   @map("end_time") @db.Time
+  startTime   DateTime   @map("start_time")
+  endTime     DateTime   @map("end_time")
   status      SlotStatus @default(OPEN)
   lockedUntil DateTime?  @map("locked_until")
   createdAt   DateTime   @default(now()) @map("created_at")

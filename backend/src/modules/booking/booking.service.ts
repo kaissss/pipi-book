@@ -322,25 +322,9 @@ function mapUser(user: any) {
   };
 }
 
-// Compose the slot's stored date + time columns into a single ISO datetime,
-// which is what the client expects for AvailabilitySlot.startTime/endTime.
-function composeIso(date: Date, time: Date): string {
-  const d = new Date(date);
-  const t = new Date(time);
-  return new Date(
-    Date.UTC(
-      d.getUTCFullYear(),
-      d.getUTCMonth(),
-      d.getUTCDate(),
-      t.getUTCHours(),
-      t.getUTCMinutes(),
-    ),
-  ).toISOString();
-}
-
 const SLOT_STATUS_MAP: Record<string, string> = {
   OPEN: 'AVAILABLE',
-  LOCKED: 'AVAILABLE',
+  LOCKED: 'BLOCKED',
   BOOKED: 'BOOKED',
 };
 
@@ -348,8 +332,8 @@ function mapSlot(slot: any) {
   return {
     id: slot.id,
     coachId: slot.coachId,
-    startTime: composeIso(slot.date, slot.startTime),
-    endTime: composeIso(slot.date, slot.endTime),
+    startTime: slot.startTime.toISOString(),
+    endTime: slot.endTime.toISOString(),
     status: SLOT_STATUS_MAP[slot.status] ?? slot.status,
   };
 }

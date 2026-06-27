@@ -1,40 +1,39 @@
 import {
-  IsString,
-  IsNotEmpty,
   IsDateString,
-  Matches,
   IsOptional,
+  IsString,
+  IsUUID,
   IsArray,
   ValidateNested,
+  ArrayMinSize,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class CreateSlotDto {
-  @ApiProperty({ description: 'Date of the slot (YYYY-MM-DD)' })
+  @ApiProperty({ description: 'ISO 8601 start datetime' })
   @IsDateString()
-  date: string;
-
-  @ApiProperty({ description: 'Start time (HH:mm)' })
-  @IsString()
-  @IsNotEmpty()
-  @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
-    message: 'startTime must be in HH:mm format',
-  })
   startTime: string;
 
-  @ApiProperty({ description: 'End time (HH:mm)' })
-  @IsString()
-  @IsNotEmpty()
-  @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
-    message: 'endTime must be in HH:mm format',
-  })
+  @ApiProperty({ description: 'ISO 8601 end datetime' })
+  @IsDateString()
   endTime: string;
+
+  @ApiProperty({ description: 'Optional service this slot is for', required: false })
+  @IsUUID()
+  @IsOptional()
+  serviceId?: string;
+
+  @ApiProperty({ description: 'Optional recurrence rule (RRULE)', required: false })
+  @IsString()
+  @IsOptional()
+  recurrenceRule?: string;
 }
 
 export class CreateBulkSlotsDto {
-  @ApiProperty({ type: [CreateSlotDto], description: 'Array of slots to create' })
+  @ApiProperty({ type: [CreateSlotDto], description: 'Slots to create' })
   @IsArray()
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => CreateSlotDto)
   slots: CreateSlotDto[];

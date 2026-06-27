@@ -21,13 +21,39 @@ import { CreateSlotDto, CreateBulkSlotsDto } from './dto/create-slot.dto';
 import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 
+// Routed under /coaches/* to match the client's resource model.
 @ApiTags('Availability')
 @ApiBearerAuth('JWT')
-@Controller('availability')
+@Controller('coaches')
 export class AvailabilityController {
   constructor(private readonly availabilityService: AvailabilityService) {}
 
-  @Post('slots')
+  @Public()
+  @Get(':coachId/availability')
+  @ApiOperation({ summary: "Get a coach's slots within a date window" })
+  @ApiQuery({ name: 'from', required: false, description: 'Start date (YYYY-MM-DD)' })
+  @ApiQuery({ name: 'to', required: false, description: 'End date (YYYY-MM-DD)' })
+  async getCoachAvailability(
+    @Param('coachId', ParseUUIDPipe) coachId: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.availabilityService.getCoachAvailability(coachId, from, to);
+  }
+
+  @Get('me/slots')
+  @ApiOperation({ summary: "Get the current coach's slots within a date window" })
+  @ApiQuery({ name: 'from', required: false })
+  @ApiQuery({ name: 'to', required: false })
+  async getMySlots(
+    @CurrentUser() user: CurrentUserPayload,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.availabilityService.getMySlots(user.sub, from, to);
+  }
+
+  @Post('me/slots')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a single availability slot' })
   async createSlot(
@@ -37,7 +63,7 @@ export class AvailabilityController {
     return this.availabilityService.createSlot(user.sub, dto);
   }
 
-  @Post('slots/bulk')
+  @Post('me/slots/bulk')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create multiple availability slots' })
   async createBulkSlots(
@@ -47,23 +73,7 @@ export class AvailabilityController {
     return this.availabilityService.createBulkSlots(user.sub, dto);
   }
 
-  @Public()
-  @Get('coach/:coachId')
-  @ApiOperation({ summary: "Get coach's available slots" })
-  @ApiQuery({ name: 'date', required: false, description: 'Filter by date (YYYY-MM-DD)' })
-  @ApiQuery({ name: 'fromDate', required: false, description: 'Filter from date (YYYY-MM-DD)' })
-  async getCoachSlots(
-    @Param('coachId', ParseUUIDPipe) coachId: string,
-    @Query('date') date?: string,
-    @Query('fromDate') fromDate?: string,
-  ) {
-    if (date) {
-      return this.availabilityService.getSlotsByCoachAndDate(coachId, date);
-    }
-    return this.availabilityService.getOpenSlots(coachId, fromDate);
-  }
-
-  @Delete('slots/:id')
+  @Delete('me/slots/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete an availability slot' })
   async deleteSlot(

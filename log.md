@@ -312,3 +312,41 @@ Same as the LINE-login saga: frontend types hand-written speculatively with no s
 ### Migration note
 
 Apply before restarting the backend: `cd backend && npx prisma migrate deploy`. Railway applies it on deploy automatically.
+
+---
+
+## 2026-06-27 — Day 5 (continued): Align coach services + availability endpoints
+
+### Goal
+Complete the deferred path/shape mismatches so the coach-services CRUD and the booking/scheduling calendars work end-to-end.
+
+### Coach services CRUD
+Frontend called `/coaches/me/services` etc.; backend served `/services`. Re-routed
+`ServiceController` under `@Controller('coaches')`:
+- `GET :coachId/services`, `POST me/services`, `PATCH me/services/:serviceId`, `DELETE me/services/:serviceId`
+- Dropped the unused standalone `GET /services/:id` (would have collided with `GET /coaches/:id`).
+
+### Availability / slots
+Frontend (FullCalendar) is built on **ISO start/end datetimes**; backend stored `date` + `time`
+separately (timezone-ambiguous). Fixed the model rather than band-aid the boundary:
+- `AvailableSlot` now stores `startTime`/`endTime` as full `DateTime` (dropped `date`).
+- `AvailabilityController` re-routed under `/coaches/*`: `GET :coachId/availability`,
+  `GET me/slots`, `POST me/slots`, `POST me/slots/bulk`, `DELETE me/slots/:id` (all with `from`/`to` window).
+- Slot create accepts ISO; responses return ISO + status mapped OPEN→AVAILABLE / LOCKED→BLOCKED / BOOKED→BOOKED.
+- `booking.service` slot mapper simplified to `startTime.toISOString()` (no more date+time compose).
+- Not implemented (frontend has them but no page calls them): `/block`, availability patterns.
+
+### Workflow finding
+The Dockerfile runs `prisma migrate deploy`, but `backend/prisma/migrations/` is git-ignored and
+nothing is committed — so that pipeline is effectively a no-op. Confirmed with the team the real
+workflow is **`prisma db push`** (schema.prisma is the source of truth). Did NOT commit migrations
+or change the ignore rule. Schema changes are applied via `npx prisma db push`.
+
+### Apply (db push workflow)
+`cd backend && npx prisma db push --accept-data-loss` — the `--accept-data-loss` flag is required
+because this drops the old coach columns (nickname/introduction/hourly_price), retypes `experience`,
+and drops the slot `date` column.
+
+### Result
+Both apps type-check clean. Coach can manage services and open availability; booking calendar loads
+slots. (Earlier Day-5 instruction to run `migrate deploy` was wrong for this project — use `db push`.)

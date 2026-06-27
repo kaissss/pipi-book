@@ -20,32 +20,30 @@ export class AvailabilityRepository {
     return this.prisma.availableSlot.findUnique({ where: { id } });
   }
 
-  async findByCoachAndDate(
-    coachId: string,
-    date: string,
-  ): Promise<AvailableSlot[]> {
-    const dateObj = new Date(date);
+  /**
+   * Slots for a coach within an optional [from, to) datetime window. When
+   * `openOnly` is set, restricts to OPEN slots from now onward (booking view);
+   * otherwise returns every slot (coach's own schedule view).
+   */
+  async findByCoach(params: {
+    coachId: string;
+    from?: Date;
+    to?: Date;
+    openOnly?: boolean;
+  }): Promise<AvailableSlot[]> {
+    const { coachId, from, to, openOnly } = params;
     return this.prisma.availableSlot.findMany({
       where: {
         coachId,
-        date: dateObj,
+        ...(openOnly && { status: SlotStatus.OPEN }),
+        ...((from || to) && {
+          startTime: {
+            ...(from && { gte: from }),
+            ...(to && { lt: to }),
+          },
+        }),
       },
       orderBy: { startTime: 'asc' },
-    });
-  }
-
-  async findOpenSlotsByCoach(
-    coachId: string,
-    fromDate?: string,
-  ): Promise<AvailableSlot[]> {
-    const now = new Date();
-    return this.prisma.availableSlot.findMany({
-      where: {
-        coachId,
-        status: SlotStatus.OPEN,
-        date: { gte: fromDate ? new Date(fromDate) : now },
-      },
-      orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
     });
   }
 
@@ -56,19 +54,13 @@ export class AvailabilityRepository {
   ): Promise<AvailableSlot> {
     return this.prisma.availableSlot.update({
       where: { id },
-      data: {
-        status,
-        lockedUntil: lockedUntil ?? null,
-      },
+      data: { status, lockedUntil: lockedUntil ?? null },
     });
   }
 
   async releaseExpiredLocks(): Promise<number> {
     const result = await this.prisma.availableSlot.updateMany({
-      where: {
-        status: SlotStatus.LOCKED,
-        lockedUntil: { lt: new Date() },
-      },
+      where: { status: SlotStatus.LOCKED, lockedUntil: { lt: new Date() } },
       data: { status: SlotStatus.OPEN, lockedUntil: null },
     });
     return result.count;

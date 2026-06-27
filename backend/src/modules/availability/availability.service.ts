@@ -11,6 +11,13 @@ import { CreateSlotDto, CreateBulkSlotsDto } from './dto/create-slot.dto';
 import { SlotResponseDto } from './dto/slot-response.dto';
 import { SlotNotFoundException } from '../../common/exceptions/booking.exceptions';
 
+// Backend slot lifecycle -> client-facing status.
+const SLOT_STATUS_MAP: Record<string, string> = {
+  OPEN: 'AVAILABLE',
+  BOOKED: 'BOOKED',
+  LOCKED: 'BLOCKED',
+};
+
 @Injectable()
 export class AvailabilityService {
   private readonly logger = new Logger(AvailabilityService.name);
@@ -20,93 +27,65 @@ export class AvailabilityService {
     private readonly coachRepository: CoachRepository,
   ) {}
 
-  async createSlot(
-    userId: string,
-    dto: CreateSlotDto,
-  ): Promise<SlotResponseDto> {
-    const coach = await this.coachRepository.findByUserId(userId);
-    if (!coach) {
-      throw new NotFoundException('Coach profile not found');
-    }
-
-    this.validateTimeRange(dto.startTime, dto.endTime);
+  async createSlot(userId: string, dto: CreateSlotDto): Promise<SlotResponseDto> {
+    const coach = await this.requireCoach(userId);
+    const { start, end } = this.validateRange(dto.startTime, dto.endTime);
 
     const slot = await this.availabilityRepository.create({
       coach: { connect: { id: coach.id } },
-      date: new Date(dto.date),
-      startTime: this.parseTime(dto.startTime),
-      endTime: this.parseTime(dto.endTime),
+      startTime: start,
+      endTime: end,
     });
 
-    this.logger.log({
-      message: 'Slot created',
-      slotId: slot.id,
-      coachId: coach.id,
-      date: dto.date,
-    });
-
-    return this.toResponseDto(slot);
+    this.logger.log({ message: 'Slot created', slotId: slot.id, coachId: coach.id });
+    return toResponseDto(slot);
   }
 
   async createBulkSlots(
     userId: string,
     dto: CreateBulkSlotsDto,
   ): Promise<{ created: number }> {
-    const coach = await this.coachRepository.findByUserId(userId);
-    if (!coach) {
-      throw new NotFoundException('Coach profile not found');
-    }
+    const coach = await this.requireCoach(userId);
 
-    dto.slots.forEach((s) => this.validateTimeRange(s.startTime, s.endTime));
-
-    const data = dto.slots.map((s) => ({
-      coachId: coach.id,
-      date: new Date(s.date),
-      startTime: this.parseTime(s.startTime),
-      endTime: this.parseTime(s.endTime),
-    }));
-
-    const result = await this.availabilityRepository.createMany(data);
-
-    this.logger.log({
-      message: 'Bulk slots created',
-      coachId: coach.id,
-      count: result.count,
+    const data = dto.slots.map((slot) => {
+      const { start, end } = this.validateRange(slot.startTime, slot.endTime);
+      return { coachId: coach.id, startTime: start, endTime: end };
     });
 
+    const result = await this.availabilityRepository.createMany(data);
+    this.logger.log({ message: 'Bulk slots created', coachId: coach.id, count: result.count });
     return { created: result.count };
   }
 
-  async getSlotsByCoachAndDate(
+  // Public: slots for a coach in a date window (booking calendar).
+  async getCoachAvailability(
     coachId: string,
-    date: string,
+    from?: string,
+    to?: string,
   ): Promise<SlotResponseDto[]> {
     const coach = await this.coachRepository.findById(coachId);
     if (!coach) {
       throw new NotFoundException(`Coach ${coachId} not found`);
     }
-
-    const slots = await this.availabilityRepository.findByCoachAndDate(
+    const slots = await this.availabilityRepository.findByCoach({
       coachId,
-      date,
-    );
-    return slots.map(this.toResponseDto);
+      ...this.parseWindow(from, to),
+    });
+    return slots.map(toResponseDto);
   }
 
-  async getOpenSlots(
-    coachId: string,
-    fromDate?: string,
+  // The current coach's own slots in a window (schedule management).
+  async getMySlots(
+    userId: string,
+    from?: string,
+    to?: string,
   ): Promise<SlotResponseDto[]> {
-    const coach = await this.coachRepository.findById(coachId);
-    if (!coach) {
-      throw new NotFoundException(`Coach ${coachId} not found`);
-    }
-
-    const slots = await this.availabilityRepository.findOpenSlotsByCoach(
-      coachId,
-      fromDate,
-    );
-    return slots.map(this.toResponseDto);
+    const coach = await this.requireCoach(userId);
+    const slots = await this.availabilityRepository.findByCoach({
+      coachId: coach.id,
+      ...this.parseWindow(from, to),
+    });
+    return slots.map(toResponseDto);
   }
 
   async deleteSlot(userId: string, slotId: string): Promise<void> {
@@ -128,44 +107,52 @@ export class AvailabilityService {
     this.logger.log({ message: 'Slot deleted', slotId });
   }
 
-  private validateTimeRange(startTime: string, endTime: string): void {
-    const [startH, startM] = startTime.split(':').map(Number);
-    const [endH, endM] = endTime.split(':').map(Number);
-    const startMinutes = startH * 60 + startM;
-    const endMinutes = endH * 60 + endM;
+  private async requireCoach(userId: string) {
+    const coach = await this.coachRepository.findByUserId(userId);
+    if (!coach) {
+      throw new NotFoundException('Coach profile not found');
+    }
+    return coach;
+  }
 
-    if (endMinutes <= startMinutes) {
+  private parseWindow(from?: string, to?: string): { from?: Date; to?: Date } {
+    const window: { from?: Date; to?: Date } = {};
+    if (from) {
+      window.from = new Date(from);
+    }
+    if (to) {
+      // Make `to` inclusive of the whole day it names.
+      const end = new Date(to);
+      end.setHours(23, 59, 59, 999);
+      window.to = end;
+    }
+    return window;
+  }
+
+  private validateRange(startIso: string, endIso: string): { start: Date; end: Date } {
+    const start = new Date(startIso);
+    const end = new Date(endIso);
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      throw new BadRequestException('Invalid start or end datetime');
+    }
+    const durationMinutes = (end.getTime() - start.getTime()) / 60000;
+    if (durationMinutes <= 0) {
       throw new BadRequestException('End time must be after start time');
     }
-
-    if (endMinutes - startMinutes < 15) {
+    if (durationMinutes < 15) {
       throw new BadRequestException('Slot duration must be at least 15 minutes');
     }
+    return { start, end };
   }
+}
 
-  private parseTime(time: string): Date {
-    const [hours, minutes] = time.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes, 0, 0);
-    return date;
-  }
-
-  private toResponseDto(slot: any): SlotResponseDto {
-    return {
-      id: slot.id,
-      coachId: slot.coachId,
-      date: slot.date instanceof Date
-        ? slot.date.toISOString().split('T')[0]
-        : slot.date,
-      startTime: slot.startTime instanceof Date
-        ? `${slot.startTime.getHours().toString().padStart(2, '0')}:${slot.startTime.getMinutes().toString().padStart(2, '0')}`
-        : slot.startTime,
-      endTime: slot.endTime instanceof Date
-        ? `${slot.endTime.getHours().toString().padStart(2, '0')}:${slot.endTime.getMinutes().toString().padStart(2, '0')}`
-        : slot.endTime,
-      status: slot.status,
-      lockedUntil: slot.lockedUntil,
-      createdAt: slot.createdAt,
-    };
-  }
+function toResponseDto(slot: any): SlotResponseDto {
+  return {
+    id: slot.id,
+    coachId: slot.coachId,
+    startTime: slot.startTime.toISOString(),
+    endTime: slot.endTime.toISOString(),
+    status: SLOT_STATUS_MAP[slot.status] ?? slot.status,
+  };
 }

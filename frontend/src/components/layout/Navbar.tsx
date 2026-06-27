@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { Menu, X, BookOpen, User, LogOut, LayoutDashboard, GraduationCap } from "lucide-react";
+import { Menu, X, BookOpen, User, LogOut, LayoutDashboard, GraduationCap, Briefcase, Shield, CalendarDays } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { APP_NAME } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,16 @@ export default function Navbar() {
     if (isCoach) return "/coach/dashboard";
     return "/member/dashboard";
   }
+
+  // Portals the current user can switch between. A coach (or admin) is also a
+  // member who can browse and book, so every authenticated user gets the member
+  // view in addition to any elevated portal they hold.
+  const portals: { label: string; href: string; icon: typeof LayoutDashboard }[] = [
+    ...(isAdmin ? [{ label: "Admin Dashboard", href: "/admin/dashboard", icon: Shield }] : []),
+    ...(isCoach ? [{ label: "Coach Portal", href: "/coach/dashboard", icon: Briefcase }] : []),
+    { label: "Member View", href: "/member/dashboard", icon: CalendarDays },
+  ];
+  const hasMultiplePortals = portals.length > 1;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -68,12 +78,32 @@ export default function Navbar() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href={getDashboardHref()} className="flex items-center gap-2">
-                    <LayoutDashboard className="h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
+                {hasMultiplePortals && (
+                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                    Switch portal
+                  </div>
+                )}
+                {hasMultiplePortals ? (
+                  portals.map((portal) => {
+                    const Icon = portal.icon;
+                    return (
+                      <DropdownMenuItem asChild key={portal.href}>
+                        <Link href={portal.href} className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" />
+                          {portal.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })
+                ) : (
+                  <DropdownMenuItem asChild>
+                    <Link href={getDashboardHref()} className="flex items-center gap-2">
+                      <LayoutDashboard className="h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {hasMultiplePortals && <DropdownMenuSeparator />}
                 <DropdownMenuItem asChild>
                   <Link
                     href={isCoach ? "/coach/profile" : "/member/profile"}
@@ -130,13 +160,25 @@ export default function Navbar() {
           </Link>
           {isAuthenticated ? (
             <>
-              <Link
-                href={getDashboardHref()}
-                className="text-sm font-medium"
-                onClick={() => setMobileOpen(false)}
-              >
-                Dashboard
-              </Link>
+              {portals.map((portal) => (
+                <Link
+                  key={portal.href}
+                  href={portal.href}
+                  className="text-sm font-medium"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {hasMultiplePortals ? portal.label : "Dashboard"}
+                </Link>
+              ))}
+              {isStudent && (
+                <Link
+                  href="/member/become-coach"
+                  className="text-sm font-medium"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Become a Coach
+                </Link>
+              )}
               <button
                 onClick={() => { logout(); setMobileOpen(false); }}
                 className="text-sm font-medium text-destructive text-left"

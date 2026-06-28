@@ -11,6 +11,11 @@ export const appConfig = registerAs('app', () => ({
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
+  // Public frontend base URL (used e.g. to redirect the buyer back after ECPay).
+  frontendUrl:
+    process.env.FRONTEND_URL ||
+    (process.env.CORS_ORIGINS ?? '').split(',')[0]?.trim() ||
+    'http://localhost:3000',
   // Swagger is on outside production. In production it's off unless explicitly
   // enabled with ENABLE_SWAGGER=true, so the API surface isn't published by default.
   enableSwagger:

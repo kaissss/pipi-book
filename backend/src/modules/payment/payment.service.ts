@@ -85,9 +85,9 @@ export class PaymentService {
       totalAmount: servicePrice,
       tradeDesc: `PiPiBook booking ${booking.id.slice(0, 8)}`,
       itemName: booking.service?.name || 'Coaching Session',
-      // ReturnURL (server-to-server webhook) comes from config; the client's
-      // returnUrl is where the buyer's browser returns afterwards.
-      orderResultURL: dto.returnUrl,
+      // ReturnURL (webhook) and OrderResultURL (backend POST handler) come from
+      // config. The client's returnUrl is the GET "return to merchant" link.
+      clientBackURL: dto.returnUrl,
       choosePayment: 'Credit',
     });
 

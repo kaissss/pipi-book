@@ -10,8 +10,10 @@ export interface EcpayOrderParams {
   itemName: string;
   // Server-to-server webhook URL; falls back to config when omitted.
   returnURL?: string;
+  // POSTed to by ECPay after payment; falls back to config.
   orderResultURL?: string;
   choosePayment?: string;
+  // GET return-to-merchant link; falls back to the configured frontend URL.
   clientBackURL?: string;
 }
 
@@ -119,6 +121,10 @@ export class EcpayService {
       order.orderResultURL ||
       this.configService.get<string>('ecpay.orderResultUrl');
 
+    const clientBackURL =
+      order.clientBackURL ||
+      this.configService.get<string>('app.frontendUrl');
+
     const params: Record<string, string> = {
       MerchantID: this.merchantId,
       MerchantTradeNo: order.merchantTradeNo,
@@ -130,7 +136,10 @@ export class EcpayService {
       ReturnURL: returnURL ?? '',
       ChoosePayment: this.mapPaymentMethod(order.choosePayment || 'Credit'),
       EncryptType: '1',
+      // OrderResultURL is POSTed to by ECPay → must be a backend endpoint.
       ...(orderResultURL && { OrderResultURL: orderResultURL }),
+      // ClientBackURL is a GET "return to merchant" link → safe for the SPA.
+      ...(clientBackURL && { ClientBackURL: clientBackURL }),
     };
 
     const checkMacValue = this.generateCheckMacValue(params);

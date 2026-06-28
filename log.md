@@ -382,3 +382,76 @@ refreshes from the server instead of running off the login-time stored copy.
 
 ### Deploy
 Backend code change only — redeploy (git push → Railway). No `prisma db push` needed.
+
+---
+
+## 2026-06-27 — Day 5 (continued): Role switcher (active-role)
+
+Single `role` per user, but a coach is also a member who books other coaches.
+Added a client-side active-role switch (not two portal links):
+- `activeRole` persisted in localStorage (`cb_active_role`), clamped to
+  `availableRoles`: ADMIN -> [ADMIN, COACH, STUDENT], COACH -> [COACH, STUDENT],
+  STUDENT -> [STUDENT]; cleared on logout.
+- Navbar renders for the ACTIVE role ("Viewing as X"; Dashboard/Profile target
+  that role); a "Switch to {role}" action changes it and routes to that dashboard.
+- activeRole never exceeds real privileges; single `role` still governs access.
+Frontend only.
+
+---
+
+## 2026-06-27 — Day 5 (continued): Mobile nav fixes
+
+- Added the missing Profile link to the mobile menu (was desktop-only).
+- Sidebar was `hidden md:flex`, so portal sub-nav (Users/Coaches,
+  Schedule/Services/Bookings) vanished on mobile. Sidebar now renders a
+  horizontal scrollable nav on mobile (sticky under navbar) + vertical sidebar on
+  desktop; layouts stack flex-col on mobile / flex-row on desktop.
+Frontend only.
+
+---
+
+## 2026-06-27 — Day 5 (continued): Legal/info pages
+
+`/terms`, `/privacy`, `/help` were linked (login + footer) but didn't exist (404).
+Added all three as static pages with Navbar/Footer + metadata. Terms/Privacy are
+MVP boilerplate pending legal review; Help is an FAQ. Frontend only.
+
+---
+
+## 2026-06-27 — Day 5 (continued): Payment endpoint alignment (init 404)
+
+Frontend POSTed `/payments/init` with `{ method, returnUrl }` expecting
+`{ formUrl, params }`; backend served `POST /payments` with a strict
+`paymentMethod` enum and a different response → 404.
+- route -> `POST /payments/init`; `InitPaymentDto { bookingId, method?, returnUrl? }`
+- returns `{ tradeNo, formUrl, params }` (params include CheckMacValue)
+- client `returnUrl` now maps to ECPay OrderResultURL (browser return); server
+  ReturnURL webhook comes from config (was wrongly overwritten)
+- frontend useInitPayment builds a hidden form and POSTs to ECPay (no single
+  redirect URL exists for ECPay)
+Requires ECPAY_* env (incl. ECPAY_RETURN_URL = public /payments/webhook).
+
+---
+
+## 2026-06-27 — Day 5 (continued): Cash payment option
+
+Added CASH alongside the online card flow.
+- `PaymentMethod` enum gains CASH; `initPayment` branches — cash records an unpaid
+  CASH payment, no ECPay redirect (booking stays PENDING for coach confirmation).
+- BookingConfirmation gains a Card/Cash selector (Card -> CREDIT_CARD); cash routes
+  to My Bookings. Frontend PaymentMethod stays "ECPAY"|"LINE_PAY"|"CREDIT_CARD"|"CASH".
+Backend redeploy + `prisma db push` (adds CASH enum). Cash lets booking complete
+without ECPay creds — handy for testing.
+
+---
+
+## 2026-06-27 — Day 5 (continued): Retry payment after abandoning ECPay
+
+Closing the ECPay page left a PENDING payment, so re-initiating hit the unique
+`bookingId` constraint (500) and there was no retry UI.
+- initPayment reuses an existing unpaid payment (refreshes ECPay trade no/params)
+  instead of creating a duplicate; still blocks if already PAID.
+- "Pay" action on pending unpaid card bookings in My Bookings re-runs ECPay.
+Known follow-up: abandoned bookings leave the slot LOCKED; `releaseExpiredLocks`
+exists but nothing schedules it — needs a cron.
+Backend redeploy only; no schema change.

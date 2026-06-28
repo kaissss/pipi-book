@@ -15,6 +15,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { PaymentService } from './payment.service';
 import { InitPaymentDto } from './dto/init-payment.dto';
 import { EcpayWebhookDto } from './dto/ecpay-webhook.dto';
@@ -24,7 +25,10 @@ import { Public } from '../../common/decorators/public.decorator';
 @ApiTags('Payments')
 @Controller('payments')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(
+    private readonly paymentService: PaymentService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('init')
   @HttpCode(HttpStatus.CREATED)
@@ -54,6 +58,22 @@ export class PaymentController {
       res.setHeader('Content-Type', 'text/plain');
       return res.status(400).send('0|Error');
     }
+  }
+
+  @Public()
+  @Post('result')
+  @ApiOperation({ summary: 'ECPay browser return (POST) — finalizes and redirects to the app' })
+  async paymentResult(@Body() body: EcpayWebhookDto, @Res() res: Response) {
+    // ECPay POSTs the result to the buyer's browser here. The authoritative
+    // update is the server-to-server webhook (ReturnURL); process this too as a
+    // best-effort fallback, then 303-redirect (GET) back into the SPA.
+    try {
+      await this.paymentService.handleWebhook(body);
+    } catch {
+      // ignore — webhook is the source of truth
+    }
+    const frontendUrl = this.configService.get<string>('app.frontendUrl');
+    return res.redirect(303, `${frontendUrl}/member/bookings`);
   }
 
   @Get('booking/:bookingId')

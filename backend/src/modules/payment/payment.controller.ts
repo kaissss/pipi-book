@@ -16,7 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { PaymentService } from './payment.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
+import { InitPaymentDto } from './dto/init-payment.dto';
 import { EcpayWebhookDto } from './dto/ecpay-webhook.dto';
 import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
@@ -26,15 +26,15 @@ import { Public } from '../../common/decorators/public.decorator';
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
-  @Post()
+  @Post('init')
   @HttpCode(HttpStatus.CREATED)
   @ApiBearerAuth('JWT')
-  @ApiOperation({ summary: 'Create a payment order for a booking' })
-  async createPayment(
+  @ApiOperation({ summary: 'Initialize a payment and return the ECPay form data' })
+  async initPayment(
     @CurrentUser() user: CurrentUserPayload,
-    @Body() dto: CreatePaymentDto,
+    @Body() dto: InitPaymentDto,
   ) {
-    return this.paymentService.createPayment(user.sub, dto);
+    return this.paymentService.initPayment(user.sub, dto);
   }
 
   @Public()

@@ -8,7 +8,7 @@ import { PaymentRepository } from './payment.repository';
 import { BookingRepository } from '../booking/booking.repository';
 import { BookingService } from '../booking/booking.service';
 import { EcpayService } from './ecpay.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
+import { InitPaymentDto } from './dto/init-payment.dto';
 import { EcpayWebhookDto } from './dto/ecpay-webhook.dto';
 import {
   PaymentAlreadyProcessedException,
@@ -28,7 +28,7 @@ export class PaymentService {
     private readonly ecpayService: EcpayService,
   ) {}
 
-  async createPayment(userId: string, dto: CreatePaymentDto) {
+  async initPayment(userId: string, dto: InitPaymentDto) {
     const booking = await this.bookingRepository.findById(dto.bookingId);
     if (!booking) {
       throw new NotFoundException(`Booking ${dto.bookingId} not found`);
@@ -51,39 +51,44 @@ export class PaymentService {
     const merchantTradeNo = this.ecpayService.generateMerchantTradeNo(booking.id);
     const merchantTradeDate = this.ecpayService.formatTradeDate();
 
+    // CREDIT_CARD locks the method to credit card; anything else (incl. the
+    // generic "ECPAY") lets the buyer choose on ECPay's cashier page.
+    const choosePayment = dto.method === 'CREDIT_CARD' ? 'Credit' : 'ALL';
+
     const ecpayData = this.ecpayService.buildOrderParams({
       merchantTradeNo,
       merchantTradeDate,
       totalAmount: servicePrice,
       tradeDesc: `PiPiBook booking ${booking.id.slice(0, 8)}`,
       itemName: booking.service?.name || 'Coaching Session',
-      returnURL: dto.returnUrl ?? '',
-      choosePayment: dto.paymentMethod,
+      // ReturnURL (server-to-server webhook) comes from config; the client's
+      // returnUrl is where the buyer's browser returns afterwards.
+      orderResultURL: dto.returnUrl,
+      choosePayment,
     });
 
-    const payment = await this.paymentRepository.create({
+    await this.paymentRepository.create({
       booking: { connect: { id: dto.bookingId } },
       amount: servicePrice,
-      paymentMethod: dto.paymentMethod as PaymentMethod,
+      // Actual method is confirmed via webhook; store a placeholder for now.
+      paymentMethod: PaymentMethod.CREDIT_CARD,
       paymentStatus: PaymentStatus.PENDING,
       ecpayTradeNo: merchantTradeNo,
       ecpayData: ecpayData.params,
     });
 
     this.logger.log({
-      message: 'Payment created',
-      paymentId: payment.id,
+      message: 'Payment initialized',
       bookingId: dto.bookingId,
       amount: servicePrice,
       merchantTradeNo,
     });
 
+    // The client renders these as a hidden form and POSTs to ECPay.
     return {
-      paymentId: payment.id,
-      bookingId: dto.bookingId,
-      amount: servicePrice,
-      ecpayFormUrl: ecpayData.formUrl,
-      ecpayParams: { ...ecpayData.params, CheckMacValue: ecpayData.checkMacValue },
+      tradeNo: merchantTradeNo,
+      formUrl: ecpayData.formUrl,
+      params: { ...ecpayData.params, CheckMacValue: ecpayData.checkMacValue },
     };
   }
 

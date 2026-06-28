@@ -8,12 +8,28 @@ export function useInitPayment() {
   return useMutation({
     mutationFn: (payload: PaymentInitPayload) => paymentService.initPayment(payload),
     onSuccess: (data) => {
-      // Redirect to ECPay or LINE Pay checkout page
-      if (data.paymentUrl) {
-        window.location.href = data.paymentUrl;
+      // ECPay has no single redirect URL — build a hidden form from the signed
+      // params and POST it, which navigates the browser to ECPay's cashier.
+      if (data.formUrl && data.params) {
+        submitToEcpay(data.formUrl, data.params);
       }
     },
   });
+}
+
+function submitToEcpay(formUrl: string, params: Record<string, string>) {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = formUrl;
+  Object.entries(params).forEach(([name, value]) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = String(value);
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  form.submit();
 }
 
 export function usePaymentByBooking(bookingId: string) {

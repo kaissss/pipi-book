@@ -170,8 +170,11 @@ export interface PaymentInitPayload {
 }
 
 export interface PaymentInitResponse {
-  paymentUrl: string;
   tradeNo: string;
+  // ECPay requires a form POST (no single redirect URL): the client renders
+  // these params as a hidden form and submits it to formUrl.
+  formUrl: string;
+  params: Record<string, string>;
 }
 
 // ─── Notification ─────────────────────────────────────────────────────────────

@@ -8,7 +8,8 @@ export interface EcpayOrderParams {
   totalAmount: number;
   tradeDesc: string;
   itemName: string;
-  returnURL: string;
+  // Server-to-server webhook URL; falls back to config when omitted.
+  returnURL?: string;
   orderResultURL?: string;
   choosePayment?: string;
   clientBackURL?: string;
@@ -172,6 +173,7 @@ export class EcpayService {
       CVS: 'CVS',
       BARCODE: 'BARCODE',
       Credit: 'Credit',
+      ALL: 'ALL',
     };
     return map[method] || 'Credit';
   }

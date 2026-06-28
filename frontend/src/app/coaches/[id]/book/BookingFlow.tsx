@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { useCoach } from "@/hooks/useCoach";
 import { useCreateBooking } from "@/hooks/useBooking";
@@ -13,7 +14,7 @@ import BookingConfirmation from "@/components/booking/BookingConfirmation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import type { Service, AvailabilitySlot } from "@/types";
+import type { Service, AvailabilitySlot, PaymentMethod } from "@/types";
 
 type Step = 1 | 2 | 3;
 
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export default function BookingFlow({ coachId }: Props) {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { data: coach, isLoading } = useCoach(coachId);
 
@@ -35,6 +37,7 @@ export default function BookingFlow({ coachId }: Props) {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
   const [notes, setNotes] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CREDIT_CARD");
 
   const createBooking = useCreateBooking();
   const initPayment = useInitPayment();
@@ -83,9 +86,15 @@ export default function BookingFlow({ coachId }: Props) {
 
     await initPayment.mutateAsync({
       bookingId: booking.id,
-      method: "ECPAY",
+      method: paymentMethod,
       returnUrl: `${window.location.origin}/member/bookings`,
     });
+
+    // Card payments redirect to ECPay (handled in the mutation). Cash has no
+    // redirect, so send the user to their bookings to await coach confirmation.
+    if (paymentMethod === "CASH") {
+      router.push("/member/bookings");
+    }
   }
 
   return (
@@ -185,6 +194,8 @@ export default function BookingFlow({ coachId }: Props) {
             slot={selectedSlot}
             notes={notes}
             onNotesChange={setNotes}
+            paymentMethod={paymentMethod}
+            onPaymentMethodChange={setPaymentMethod}
             onConfirm={handleConfirm}
             isLoading={createBooking.isPending || initPayment.isPending}
           />

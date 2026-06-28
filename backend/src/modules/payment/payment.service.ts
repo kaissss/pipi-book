@@ -48,12 +48,22 @@ export class PaymentService {
     }
 
     const servicePrice = Number(booking.service?.price || 0);
+
+    // Cash: no online payment. Record an unpaid CASH payment; the coach settles
+    // it in person and confirms the booking. No ECPay redirect.
+    if (dto.method === 'CASH') {
+      await this.paymentRepository.create({
+        booking: { connect: { id: dto.bookingId } },
+        amount: servicePrice,
+        paymentMethod: PaymentMethod.CASH,
+        paymentStatus: PaymentStatus.PENDING,
+      });
+      this.logger.log({ message: 'Cash payment recorded', bookingId: dto.bookingId, amount: servicePrice });
+      return { cash: true as const };
+    }
+
     const merchantTradeNo = this.ecpayService.generateMerchantTradeNo(booking.id);
     const merchantTradeDate = this.ecpayService.formatTradeDate();
-
-    // CREDIT_CARD locks the method to credit card; anything else (incl. the
-    // generic "ECPAY") lets the buyer choose on ECPay's cashier page.
-    const choosePayment = dto.method === 'CREDIT_CARD' ? 'Credit' : 'ALL';
 
     const ecpayData = this.ecpayService.buildOrderParams({
       merchantTradeNo,
@@ -64,7 +74,7 @@ export class PaymentService {
       // ReturnURL (server-to-server webhook) comes from config; the client's
       // returnUrl is where the buyer's browser returns afterwards.
       orderResultURL: dto.returnUrl,
-      choosePayment,
+      choosePayment: 'Credit',
     });
 
     await this.paymentRepository.create({

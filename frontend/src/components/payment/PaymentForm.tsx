@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, Smartphone } from "lucide-react";
+import { CreditCard, Smartphone, Banknote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -27,6 +27,12 @@ const PAYMENT_METHODS: { id: PaymentMethod; label: string; description: string; 
     description: "Pay with your LINE wallet",
     icon: <Smartphone className="h-5 w-5 text-line" />,
   },
+  {
+    id: "CASH",
+    label: "Cash",
+    description: "Pay the coach in person",
+    icon: <Banknote className="h-5 w-5" />,
+  },
 ];
 
 export default function PaymentForm({
@@ -36,6 +42,8 @@ export default function PaymentForm({
   onPay,
   isLoading,
 }: PaymentFormProps) {
+  const isCash = selectedMethod === "CASH";
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -82,7 +90,11 @@ export default function PaymentForm({
       </div>
 
       <Button className="w-full" size="lg" onClick={onPay} disabled={isLoading}>
-        {isLoading ? "Redirecting..." : `Pay ${formatCurrency(amount)}`}
+        {isLoading
+          ? "Processing..."
+          : isCash
+          ? "Confirm Booking"
+          : `Pay ${formatCurrency(amount)}`}
       </Button>
     </div>
   );

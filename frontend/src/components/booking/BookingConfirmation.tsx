@@ -1,14 +1,14 @@
 "use client";
 
-import { Calendar, Clock, CreditCard, User } from "lucide-react";
+import { Calendar, Clock, CreditCard, User, Banknote } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { formatDateTime, formatDuration, formatCurrency, getInitials } from "@/lib/utils";
-import type { Coach, Service, AvailabilitySlot } from "@/types";
+import { cn, formatDateTime, formatDuration, formatCurrency, getInitials } from "@/lib/utils";
+import type { Coach, Service, AvailabilitySlot, PaymentMethod } from "@/types";
 
 interface BookingConfirmationProps {
   coach: Coach;
@@ -16,9 +16,16 @@ interface BookingConfirmationProps {
   slot: AvailabilitySlot;
   notes: string;
   onNotesChange: (notes: string) => void;
+  paymentMethod: PaymentMethod;
+  onPaymentMethodChange: (method: PaymentMethod) => void;
   onConfirm: () => void;
   isLoading: boolean;
 }
+
+const PAYMENT_OPTIONS: { id: PaymentMethod; label: string; description: string; icon: typeof CreditCard }[] = [
+  { id: "CREDIT_CARD", label: "Card", description: "Pay online now via ECPay", icon: CreditCard },
+  { id: "CASH", label: "Cash", description: "Pay the coach in person", icon: Banknote },
+];
 
 export default function BookingConfirmation({
   coach,
@@ -26,6 +33,8 @@ export default function BookingConfirmation({
   slot,
   notes,
   onNotesChange,
+  paymentMethod,
+  onPaymentMethodChange,
   onConfirm,
   isLoading,
 }: BookingConfirmationProps) {
@@ -88,6 +97,36 @@ export default function BookingConfirmation({
         </CardContent>
       </Card>
 
+      {/* Payment method */}
+      <div className="space-y-2">
+        <Label>Payment method</Label>
+        <div className="grid grid-cols-2 gap-3">
+          {PAYMENT_OPTIONS.map((option) => {
+            const Icon = option.icon;
+            const selected = paymentMethod === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => onPaymentMethodChange(option.id)}
+                className={cn(
+                  "flex items-start gap-3 rounded-lg border p-3 text-left transition-colors",
+                  selected ? "ring-2 ring-primary border-primary" : "hover:border-primary/50"
+                )}
+              >
+                <div className={cn("p-2 rounded-md shrink-0", selected ? "bg-primary/10" : "bg-muted")}>
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">{option.label}</p>
+                  <p className="text-xs text-muted-foreground">{option.description}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Notes */}
       <div className="space-y-2">
         <Label htmlFor="notes">Notes for coach (optional)</Label>
@@ -107,10 +146,16 @@ export default function BookingConfirmation({
         onClick={onConfirm}
         disabled={isLoading}
       >
-        {isLoading ? "Processing..." : "Confirm & Pay"}
+        {isLoading
+          ? "Processing..."
+          : paymentMethod === "CASH"
+          ? "Confirm Booking"
+          : "Confirm & Pay"}
       </Button>
       <p className="text-xs text-muted-foreground text-center">
-        You will be redirected to ECPay to complete payment.
+        {paymentMethod === "CASH"
+          ? "Your booking will be pending until the coach confirms it. Pay in person at your session."
+          : "You will be redirected to ECPay to complete payment."}
       </p>
     </div>
   );

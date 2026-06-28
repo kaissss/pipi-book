@@ -147,7 +147,7 @@ export type PaymentStatus =
   | "FAILED"
   | "REFUNDED"
   | "CANCELLED";
-export type PaymentMethod = "ECPAY" | "LINE_PAY" | "CREDIT_CARD";
+export type PaymentMethod = "ECPAY" | "LINE_PAY" | "CREDIT_CARD" | "CASH";
 
 export interface Payment {
   id: string;
@@ -170,11 +170,12 @@ export interface PaymentInitPayload {
 }
 
 export interface PaymentInitResponse {
-  tradeNo: string;
+  tradeNo?: string;
   // ECPay requires a form POST (no single redirect URL): the client renders
-  // these params as a hidden form and submits it to formUrl.
-  formUrl: string;
-  params: Record<string, string>;
+  // these params as a hidden form and submits it to formUrl. Absent for Cash.
+  formUrl?: string;
+  params?: Record<string, string>;
+  cash?: boolean;
 }
 
 // ─── Notification ─────────────────────────────────────────────────────────────

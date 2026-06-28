@@ -74,8 +74,13 @@ export class BookingRepository {
     return { data, total };
   }
 
+  // A slot can have several bookings over time (cancelled + re-booked); the
+  // active one is the most recent that isn't cancelled.
   async findBySlotId(slotId: string): Promise<Booking | null> {
-    return this.prisma.booking.findUnique({ where: { slotId } });
+    return this.prisma.booking.findFirst({
+      where: { slotId, bookingStatus: { not: BookingStatus.CANCELLED } },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   async findRecent(limit = 10): Promise<BookingWithRelations[]> {

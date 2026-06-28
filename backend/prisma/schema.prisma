@@ -161,8 +161,8 @@ model AvailableSlot {
   createdAt   DateTime   @default(now()) @map("created_at")
   updatedAt   DateTime   @updatedAt @map("updated_at")
 
-  coach   Coach    @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  booking Booking?
+  coach    Coach     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  bookings Booking[]
 
   @@map("available_slots")
 }
@@ -172,7 +172,7 @@ model Booking {
   memberId      String        @map("member_id")
   coachId       String        @map("coach_id")
   serviceId     String        @map("service_id")
-  slotId        String        @unique @map("slot_id")
+  slotId        String        @map("slot_id")
   bookingStatus BookingStatus @default(PENDING) @map("booking_status")
   notes         String?
   meetingUrl    String?       @map("meeting_url")

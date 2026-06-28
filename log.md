@@ -528,3 +528,28 @@ Backend redeploy only.
 New rule: "Raise bad practice when you see it" — don't silently follow an existing
 flawed pattern (e.g. versioning a webhook URL under /api/v1); flag and fix it.
 Prompted by the earlier ECPay path back-and-forth.
+
+---
+
+## 2026-06-28 — Day 6: Re-booking a slot 500'd (slot↔booking 1:1)
+
+### Symptom
+`POST /api/v1/bookings` → 500. Railway log:
+`Invalid prisma.booking.create() ... violate the required relation 'AvailableSlotToBooking'`.
+
+### Root cause
+`Booking.slotId` was `@unique` (1:1 slot↔booking), so a slot could hold only one
+booking row ever. After cancelling (slot → OPEN, booking row kept) or abandoning a
+payment, re-booking that slot violated the relation → 500. The `@unique` was
+redundant anyway — the OPEN-status check already prevents two active bookings.
+
+### Fix (backend)
+- slot→booking is now one-to-many: drop `@unique` on `Booking.slotId`;
+  `AvailableSlot.booking?` → `bookings Booking[]`.
+- only one ACTIVE booking per slot, still enforced by the OPEN-status check in
+  createBooking (so no double-booking).
+- `findBySlotId` returns the active booking (latest non-cancelled) via `findFirst`.
+- History preserved (cancelled bookings remain).
+
+Apply with `prisma db push` (drops the slot_id unique index; no data loss).
+Backend redeploy.

@@ -19,6 +19,7 @@ interface BookingCardProps {
   perspective: "student" | "coach";
   onCancel?: (id: string) => void;
   onConfirm?: (id: string) => void;
+  onPay?: (id: string) => void;
 }
 
 export default function BookingCard({
@@ -26,9 +27,17 @@ export default function BookingCard({
   perspective,
   onCancel,
   onConfirm,
+  onPay,
 }: BookingCardProps) {
   const other = perspective === "student" ? booking.coach.user : booking.student;
   const label = perspective === "student" ? "Coach" : "Student";
+
+  // A card booking left unpaid (e.g. the buyer closed the ECPay page) can be
+  // paid again. Cash bookings settle in person, so no pay button.
+  const needsPayment =
+    booking.status === "PENDING" &&
+    booking.payment?.method !== "CASH" &&
+    booking.payment?.status !== "PAID";
 
   return (
     <Card>
@@ -79,6 +88,11 @@ export default function BookingCard({
                   <Video className="h-3 w-3 mr-1" />
                   Join
                 </a>
+              </Button>
+            )}
+            {onPay && needsPayment && (
+              <Button size="sm" onClick={() => onPay(booking.id)}>
+                Pay
               </Button>
             )}
             {onConfirm && booking.status === "PENDING" && (

@@ -10,6 +10,10 @@ export class PaymentRepository {
     return this.prisma.payment.create({ data });
   }
 
+  async update(id: string, data: Prisma.PaymentUpdateInput): Promise<Payment> {
+    return this.prisma.payment.update({ where: { id }, data });
+  }
+
   async findById(id: string): Promise<Payment | null> {
     return this.prisma.payment.findUnique({
       where: { id },

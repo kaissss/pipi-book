@@ -15,7 +15,7 @@ import {
   PaymentSignatureInvalidException,
   PaymentNotFoundException,
 } from '../../common/exceptions/payment.exceptions';
-import { PaymentStatus, BookingStatus, PaymentMethod } from '@prisma/client';
+import { PaymentStatus, BookingStatus, PaymentMethod, Prisma } from '@prisma/client';
 
 @Injectable()
 export class PaymentService {
@@ -49,15 +49,29 @@ export class PaymentService {
 
     const servicePrice = Number(booking.service?.price || 0);
 
+    // `existing` is the (unpaid) payment from a prior attempt — e.g. the buyer
+    // closed the ECPay page. Reuse it: bookingId is unique, so creating a second
+    // payment row would fail.
+
     // Cash: no online payment. Record an unpaid CASH payment; the coach settles
     // it in person and confirms the booking. No ECPay redirect.
     if (dto.method === 'CASH') {
-      await this.paymentRepository.create({
-        booking: { connect: { id: dto.bookingId } },
-        amount: servicePrice,
-        paymentMethod: PaymentMethod.CASH,
-        paymentStatus: PaymentStatus.PENDING,
-      });
+      if (existing) {
+        await this.paymentRepository.update(existing.id, {
+          amount: servicePrice,
+          paymentMethod: PaymentMethod.CASH,
+          paymentStatus: PaymentStatus.PENDING,
+          ecpayTradeNo: null,
+          ecpayData: Prisma.DbNull,
+        });
+      } else {
+        await this.paymentRepository.create({
+          booking: { connect: { id: dto.bookingId } },
+          amount: servicePrice,
+          paymentMethod: PaymentMethod.CASH,
+          paymentStatus: PaymentStatus.PENDING,
+        });
+      }
       this.logger.log({ message: 'Cash payment recorded', bookingId: dto.bookingId, amount: servicePrice });
       return { cash: true as const };
     }
@@ -77,15 +91,27 @@ export class PaymentService {
       choosePayment: 'Credit',
     });
 
-    await this.paymentRepository.create({
-      booking: { connect: { id: dto.bookingId } },
-      amount: servicePrice,
-      // Actual method is confirmed via webhook; store a placeholder for now.
-      paymentMethod: PaymentMethod.CREDIT_CARD,
-      paymentStatus: PaymentStatus.PENDING,
-      ecpayTradeNo: merchantTradeNo,
-      ecpayData: ecpayData.params,
-    });
+    // A fresh ECPay order needs a fresh MerchantTradeNo, so reuse the row but
+    // overwrite the trade number/params on each attempt.
+    if (existing) {
+      await this.paymentRepository.update(existing.id, {
+        amount: servicePrice,
+        paymentMethod: PaymentMethod.CREDIT_CARD,
+        paymentStatus: PaymentStatus.PENDING,
+        ecpayTradeNo: merchantTradeNo,
+        ecpayData: ecpayData.params,
+      });
+    } else {
+      await this.paymentRepository.create({
+        booking: { connect: { id: dto.bookingId } },
+        amount: servicePrice,
+        // Actual method is confirmed via webhook; store a placeholder for now.
+        paymentMethod: PaymentMethod.CREDIT_CARD,
+        paymentStatus: PaymentStatus.PENDING,
+        ecpayTradeNo: merchantTradeNo,
+        ecpayData: ecpayData.params,
+      });
+    }
 
     this.logger.log({
       message: 'Payment initialized',

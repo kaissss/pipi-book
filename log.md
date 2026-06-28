@@ -455,3 +455,49 @@ Closing the ECPay page left a PENDING payment, so re-initiating hit the unique
 Known follow-up: abandoned bookings leave the slot LOCKED; `releaseExpiredLocks`
 exists but nothing schedules it — needs a cron.
 Backend redeploy only; no schema change.
+
+---
+
+## 2026-06-27 — Day 5 (continued): Fix ECPay return/result flow
+
+### Symptom
+After paying on ECPay, the browser POST landed on the frontend
+`/member/bookings` → middleware redirected to `/auth/login` → 405; then after an
+env tweak, `POST /payment/result` → 404.
+
+### Root causes
+1. `initPayment` passed the frontend `returnUrl` as ECPay `OrderResultURL`, which
+   ECPay POSTs to — but the SPA page is auth-gated and GET-only (405).
+2. ECPay callback URLs didn't match real routes: the configured path was
+   `/payment/result` (singular, no prefix) while the route was
+   `/api/v1/payments/result` (404).
+
+### Fix (backend; no schema change)
+- Frontend `returnUrl` is now ECPay `ClientBackURL` (GET return-to-merchant), not
+  `OrderResultURL`. `ReturnURL`/`OrderResultURL` come from config.
+- Added `POST /payments/result`: handles ECPay's browser POST, finalizes as a
+  best-effort fallback (reusing the webhook logic), then 303-redirects (GET) to
+  `FRONTEND_URL/member/bookings`.
+- Added `app.frontendUrl` config (`FRONTEND_URL`, falls back to `CORS_ORIGINS`).
+- Excluded `payments/webhook` and `payments/result` from the `/api/v1` prefix so
+  ECPay hits stable, unversioned paths (like `/health`). `init` stays under
+  `/api/v1` (SPA-only).
+- `.env.example`: documented `FRONTEND_URL`, `REDIS_TOKEN`, and the unversioned
+  callback paths.
+
+### Correct flow (ECPay AIO, doc 2864)
+1. SPA `POST /api/v1/payments/init` → `{ formUrl, params }` (incl. CheckMacValue).
+2. SPA auto-submits hidden form POST → ECPay AioCheckOut/V5; user pays.
+3. ReturnURL (server) → `POST /payments/webhook` → verify CheckMacValue → PAID →
+   confirm booking → respond `1|OK` (authoritative).
+4. OrderResultURL (browser) → `POST /payments/result` → finalize fallback → 303 →
+   `FRONTEND_URL/member/bookings`.
+5. ClientBackURL = `FRONTEND_URL` (return-to-merchant link).
+
+### Railway env (note plural `payments`, no `/api/v1`)
+```
+ECPAY_RETURN_URL=https://pipi-book-production.up.railway.app/payments/webhook
+ECPAY_ORDER_RESULT_URL=https://pipi-book-production.up.railway.app/payments/result
+FRONTEND_URL=https://pipi-book-frontend.vercel.app
+```
+Backend redeploy only.

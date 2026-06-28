@@ -501,3 +501,30 @@ ECPAY_ORDER_RESULT_URL=https://pipi-book-production.up.railway.app/payments/resu
 FRONTEND_URL=https://pipi-book-frontend.vercel.app
 ```
 Backend redeploy only.
+
+---
+
+## 2026-06-27 — Day 5 (continued): ECPay callback accepts raw body
+
+### Symptom
+ECPay callback → 400: `property CustomField1..4 should not exist`.
+
+### Root cause
+The global ValidationPipe runs `whitelist + forbidNonWhitelisted`, so ECPay's
+extra fields (CustomField1-4, StoreID, …) were rejected. Deeper issue: those
+fields are part of ECPay's CheckMacValue, so even stripping them (not 400ing)
+would break signature verification. Webhooks must be verified by signature, not
+schema-validated.
+
+### Fix (backend only)
+- `/payments/webhook` and `/payments/result` now take the raw body
+  (`Record<string, string>`) instead of a DTO → the global pipe leaves all fields
+  intact (a plain object has no validation metatype).
+- `handleWebhook` verifies CheckMacValue over the exact received params.
+- Removed the now-unused `EcpayWebhookDto` (confirmed orphaned via grep).
+Backend redeploy only.
+
+### Note added to CLAUDE.md
+New rule: "Raise bad practice when you see it" — don't silently follow an existing
+flawed pattern (e.g. versioning a webhook URL under /api/v1); flag and fix it.
+Prompted by the earlier ECPay path back-and-forth.

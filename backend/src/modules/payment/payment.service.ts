@@ -9,7 +9,6 @@ import { BookingRepository } from '../booking/booking.repository';
 import { BookingService } from '../booking/booking.service';
 import { EcpayService } from './ecpay.service';
 import { InitPaymentDto } from './dto/init-payment.dto';
-import { EcpayWebhookDto } from './dto/ecpay-webhook.dto';
 import {
   PaymentAlreadyProcessedException,
   PaymentSignatureInvalidException,
@@ -128,37 +127,35 @@ export class PaymentService {
     };
   }
 
-  async handleWebhook(dto: EcpayWebhookDto): Promise<string> {
-    const params = { ...dto } as Record<string, string>;
-
-    // Verify signature
+  async handleWebhook(params: Record<string, string>): Promise<string> {
+    // Verify signature over the exact fields ECPay sent (incl. CustomField*).
     const isValid = this.ecpayService.verifyCheckMacValue(params);
     if (!isValid) {
       this.logger.warn({
         message: 'ECPay webhook signature invalid',
-        merchantTradeNo: dto.MerchantTradeNo,
+        merchantTradeNo: params.MerchantTradeNo,
       });
       throw new PaymentSignatureInvalidException();
     }
 
     const payment = await this.paymentRepository.findByEcpayTradeNo(
-      dto.MerchantTradeNo,
+      params.MerchantTradeNo,
     );
 
     if (!payment) {
       this.logger.error({
         message: 'Payment not found for ECPay trade',
-        merchantTradeNo: dto.MerchantTradeNo,
+        merchantTradeNo: params.MerchantTradeNo,
       });
       return '0|OrderNotFound';
     }
 
     // RtnCode 1 = success
-    const isSuccess = dto.RtnCode === '1';
+    const isSuccess = params.RtnCode === '1';
     const newStatus = isSuccess ? PaymentStatus.PAID : PaymentStatus.FAILED;
 
     await this.paymentRepository.updateByEcpayTradeNo(
-      dto.MerchantTradeNo,
+      params.MerchantTradeNo,
       newStatus,
       params,
     );
@@ -171,15 +168,15 @@ export class PaymentService {
         message: 'Payment successful, booking confirmed',
         paymentId: payment.id,
         bookingId: payment.bookingId,
-        ecpayTradeNo: dto.TradeNo,
-        amount: dto.TradeAmt,
+        ecpayTradeNo: params.TradeNo,
+        amount: params.TradeAmt,
       });
     } else {
       this.logger.warn({
         message: 'Payment failed',
         paymentId: payment.id,
-        rtnCode: dto.RtnCode,
-        rtnMsg: dto.RtnMsg,
+        rtnCode: params.RtnCode,
+        rtnMsg: params.RtnMsg,
       });
     }
 

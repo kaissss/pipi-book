@@ -18,7 +18,6 @@ import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { PaymentService } from './payment.service';
 import { InitPaymentDto } from './dto/init-payment.dto';
-import { EcpayWebhookDto } from './dto/ecpay-webhook.dto';
 import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 
@@ -46,11 +45,13 @@ export class PaymentController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'ECPay payment webhook (public)' })
   async handleWebhook(
-    @Body() dto: EcpayWebhookDto,
+    // Raw body: ECPay sends fields beyond our schema (CustomField1-4, StoreID, …)
+    // and they are all part of CheckMacValue — so we must NOT whitelist/strip them.
+    @Body() body: Record<string, string>,
     @Res() res: Response,
   ) {
     try {
-      const result = await this.paymentService.handleWebhook(dto);
+      const result = await this.paymentService.handleWebhook(body);
       // ECPay expects plain text response
       res.setHeader('Content-Type', 'text/plain');
       return res.send(result);
@@ -63,7 +64,7 @@ export class PaymentController {
   @Public()
   @Post('result')
   @ApiOperation({ summary: 'ECPay browser return (POST) — finalizes and redirects to the app' })
-  async paymentResult(@Body() body: EcpayWebhookDto, @Res() res: Response) {
+  async paymentResult(@Body() body: Record<string, string>, @Res() res: Response) {
     // ECPay POSTs the result to the buyer's browser here. The authoritative
     // update is the server-to-server webhook (ReturnURL); process this too as a
     // best-effort fallback, then 303-redirect (GET) back into the SPA.

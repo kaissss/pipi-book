@@ -584,3 +584,29 @@ LINE login doesn't work in local builds, blocking testing. Added a dev-only logi
   build AND rejected by the prod backend).
 - Only works against a backend running in dev; the Railway backend refuses it.
 No schema change, no new env.
+
+---
+
+## 2026-06-30 — Day 6 (continued): Dev login finally works locally (Prisma .env hijack)
+
+### Symptom
+Dev login worked via curl (200) but the browser was always CORS-blocked; editing
+`backend/.env.local` (CORS_ORIGINS/NODE_ENV) had no effect no matter how many restarts.
+
+### Root cause
+Prisma auto-loads **`.env`** (only `.env`, never `.env.local`) into `process.env` at
+import time — before NestJS ConfigModule runs. `dotenv` never overwrites an already-set
+var, so `.env.local` could only ADD new keys (`DEV_LOGIN_ENABLED` worked) but could never
+OVERRIDE keys shared with `.env` (CORS_ORIGINS, NODE_ENV). So local CORS stayed pinned to
+the deployed vercel origin and blocked `localhost:3000`.
+
+Also wasted time on: a stale `node dist/main` (start:prod) squatting on :4000, and
+`nest --watch` not reloading on `.env` changes. Confirmed via a temp `[envdebug]` log that
+the running process had `nodeEnv=production corsOrigins=[vercel]` despite the file merge
+yielding localhost; Windows env scopes were all empty → pointed at Prisma's early load.
+
+### Fix
+`backend/scripts/dev-local.js` sets NODE_ENV/CORS_ORIGINS/FRONTEND_URL/DEV_LOGIN_ENABLED as
+real env vars (which win over both Prisma's and Nest's `.env`), then runs `start:dev`.
+Added `npm run start:local`. Verified: `Access-Control-Allow-Origin: http://localhost:3000`.
+Use `start:local` for local dev; `.env` untouched.

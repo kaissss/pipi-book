@@ -9,7 +9,7 @@ import { buildLineAuthUrl } from "@/lib/auth";
 import { useAuth, useDevLogin } from "@/hooks/useAuth";
 import { APP_NAME } from "@/lib/constants";
 
-const DEV_LOGIN_ENABLED = process.env.NODE_ENV !== "production";
+const DEV_LOGIN_ENABLED = process.env.NEXT_PUBLIC_DEV_LOGIN === "true";
 
 function LoginContent() {
   const { isAuthenticated, isCoach, isAdmin } = useAuth();

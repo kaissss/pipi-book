@@ -98,8 +98,7 @@ export class AuthService {
    * used on a live deployment (the frontend also only exposes it in dev).
    */
   async devLogin(role: 'STUDENT' | 'COACH' | 'ADMIN' = 'STUDENT'): Promise<AuthResponseDto> {
-    const nodeEnv = this.configService.get<string>('app.nodeEnv');
-    if (nodeEnv === 'production') {
+    if (!this.configService.get<boolean>('app.devLoginEnabled')) {
       throw new UnauthorizedException('Dev login is disabled');
     }
 

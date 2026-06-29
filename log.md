@@ -553,3 +553,34 @@ redundant anyway — the OPEN-status check already prevents two active bookings.
 
 Apply with `prisma db push` (drops the slot_id unique index; no data loss).
 Backend redeploy.
+
+---
+
+## 2026-06-30 — Day 6 (continued): Batch schedule, slot unselect, dev login
+
+### Coach schedule — batch create
+Was one-dialog-per-slot. Redesigned to draft-then-save: drag multiple time blocks
+(rendered as orange "unsaved" events), click an unsaved block to remove it, Clear
+discards all, and "Save N slots" commits them in one bulk call
+(`/coaches/me/slots/bulk`). Added `useBulkCreateSlots`; fixed the frontend
+bulkCreateSlots return type to `{ created }`.
+
+### Booking calendar — unselect slot
+Clicking the already-selected slot now deselects it (toggle); `onSlotSelect`
+accepts null. (Bug: previously could only select, never clear.)
+
+### Bug noted, partially addressed
+A 1-hr service booked a whole multi-hour block because a slot = one bookable unit.
+The batch redesign lets the coach create individual hourly slots (calendar snaps to
+30 min). Auto-splitting a dragged block into fixed-length slots was offered as a
+follow-up, not built.
+
+### Dev login (bypass LINE locally)
+LINE login doesn't work in local builds, blocking testing. Added a dev-only login:
+- `POST /auth/dev/login { role }` issues JWTs for a deterministic test user
+  (`dev+{role}@pipibook.local`, role STUDENT/COACH/ADMIN) with no LINE OAuth.
+- Hard-gated: backend throws if `NODE_ENV=production`; login page only renders the
+  role buttons when `NODE_ENV !== production`. Defense in depth (hidden in prod
+  build AND rejected by the prod backend).
+- Only works against a backend running in dev; the Railway backend refuses it.
+No schema change, no new env.

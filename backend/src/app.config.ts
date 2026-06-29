@@ -22,6 +22,9 @@ export const appConfig = registerAs('app', () => ({
     process.env.ENABLE_SWAGGER !== undefined
       ? process.env.ENABLE_SWAGGER === 'true'
       : (process.env.NODE_ENV || 'development') !== 'production',
+  // Dev-only LINE-less login. Off unless explicitly enabled. NEVER set this on
+  // a public deployment (Railway/Vercel) — local/staging only.
+  devLoginEnabled: process.env.DEV_LOGIN_ENABLED === 'true',
 }));
 
 export const jwtConfig = registerAs('jwt', () => ({

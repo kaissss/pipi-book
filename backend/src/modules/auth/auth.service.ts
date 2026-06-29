@@ -94,8 +94,9 @@ export class AuthService {
 
   /**
    * Dev-only login: issues tokens for a deterministic test user of the given
-   * role, with NO LINE OAuth. Hard-gated to non-production so it can never be
-   * used on a live deployment (the frontend also only exposes it in dev).
+   * role, with NO LINE OAuth. Gated on the DEV_LOGIN_ENABLED flag, which must
+   * never be set on a public deployment (the frontend also only exposes it when
+   * NEXT_PUBLIC_DEV_LOGIN is set).
    */
   async devLogin(role: 'STUDENT' | 'COACH' | 'ADMIN' = 'STUDENT'): Promise<AuthResponseDto> {
     if (!this.configService.get<boolean>('app.devLoginEnabled')) {
@@ -110,7 +111,7 @@ export class AuthService {
       role: role as any,
     });
 
-    this.logger.warn({ message: 'DEV LOGIN used (non-production)', role, userId: user.id });
+    this.logger.warn({ message: 'DEV LOGIN used', role, userId: user.id });
     return this.generateAuthResponse(user);
   }
 

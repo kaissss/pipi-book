@@ -11,7 +11,7 @@ import {
   getStoredUser,
 } from "@/lib/auth";
 import { QUERY_KEYS } from "@/lib/constants";
-import type { User } from "@/types";
+import type { AuthResponse, User } from "@/types";
 
 export function useAuth() {
   const queryClient = useQueryClient();
@@ -72,31 +72,49 @@ export function useAuth() {
   };
 }
 
+function applyAuthAndRedirect(
+  data: AuthResponse,
+  queryClient: ReturnType<typeof useQueryClient>,
+  router: ReturnType<typeof useRouter>,
+) {
+  setTokens({
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+    expiresIn: data.expiresIn,
+  });
+  setStoredUser(data.user);
+  queryClient.setQueryData(QUERY_KEYS.ME, data.user);
+
+  switch (data.user.role) {
+    case "ADMIN":
+      router.push("/admin/dashboard");
+      break;
+    case "COACH":
+      router.push("/coach/dashboard");
+      break;
+    default:
+      router.push("/member/dashboard");
+  }
+}
+
 export function useLineCallback() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
   return useMutation({
     mutationFn: authService.lineCallback,
-    onSuccess: (data) => {
-      setTokens({
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        expiresIn: data.expiresIn,
-      });
-      setStoredUser(data.user);
-      queryClient.setQueryData(QUERY_KEYS.ME, data.user);
+    onSuccess: (data) => applyAuthAndRedirect(data, queryClient, router),
+  });
+}
 
-      switch (data.user.role) {
-        case "ADMIN":
-          router.push("/admin/dashboard");
-          break;
-        case "COACH":
-          router.push("/coach/dashboard");
-          break;
-        default:
-          router.push("/member/dashboard");
-      }
-    },
+// Dev-only: log in as a test user of the given role without LINE. The backend
+// rejects this in production and the UI only exposes it in development.
+export function useDevLogin() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: (role: "STUDENT" | "COACH" | "ADMIN") => authService.devLogin(role),
+    onSuccess: (data) => applyAuthAndRedirect(data, queryClient, router),
   });
 }

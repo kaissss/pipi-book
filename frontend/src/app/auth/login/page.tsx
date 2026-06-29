@@ -6,11 +6,14 @@ import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buildLineAuthUrl } from "@/lib/auth";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, useDevLogin } from "@/hooks/useAuth";
 import { APP_NAME } from "@/lib/constants";
+
+const DEV_LOGIN_ENABLED = process.env.NODE_ENV !== "production";
 
 function LoginContent() {
   const { isAuthenticated, isCoach, isAdmin } = useAuth();
+  const devLogin = useDevLogin();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
@@ -65,6 +68,27 @@ function LoginContent() {
               </svg>
               Continue with LINE
             </Button>
+
+            {DEV_LOGIN_ENABLED && (
+              <div className="space-y-2 rounded-md border border-dashed p-3">
+                <p className="text-xs font-medium text-muted-foreground text-center">
+                  Dev login (local only)
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["STUDENT", "COACH", "ADMIN"] as const).map((role) => (
+                    <Button
+                      key={role}
+                      variant="outline"
+                      size="sm"
+                      disabled={devLogin.isPending}
+                      onClick={() => devLogin.mutate(role)}
+                    >
+                      {role.charAt(0) + role.slice(1).toLowerCase()}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <p className="text-xs text-muted-foreground text-center">
               By continuing, you agree to our{" "}

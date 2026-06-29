@@ -92,6 +92,29 @@ export class AuthService {
     return { accessToken, expiresIn };
   }
 
+  /**
+   * Dev-only login: issues tokens for a deterministic test user of the given
+   * role, with NO LINE OAuth. Hard-gated to non-production so it can never be
+   * used on a live deployment (the frontend also only exposes it in dev).
+   */
+  async devLogin(role: 'STUDENT' | 'COACH' | 'ADMIN' = 'STUDENT'): Promise<AuthResponseDto> {
+    const nodeEnv = this.configService.get<string>('app.nodeEnv');
+    if (nodeEnv === 'production') {
+      throw new UnauthorizedException('Dev login is disabled');
+    }
+
+    const key = role.toLowerCase();
+    const user = await this.authRepository.upsertDevUser({
+      lineUserId: `dev_${key}`,
+      email: `dev+${key}@pipibook.local`,
+      displayName: `Dev ${role.charAt(0)}${key.slice(1)}`,
+      role: role as any,
+    });
+
+    this.logger.warn({ message: 'DEV LOGIN used (non-production)', role, userId: user.id });
+    return this.generateAuthResponse(user);
+  }
+
   async getMe(userId: string) {
     const user = await this.authRepository.findUserById(userId);
     if (!user) {

@@ -17,6 +17,12 @@ export const authService = {
     return data;
   },
 
+  // Dev-only: backend refuses this in production.
+  async devLogin(role: "STUDENT" | "COACH" | "ADMIN"): Promise<AuthResponse> {
+    const { data } = await apiClient.post<AuthResponse>("/auth/dev/login", { role });
+    return data;
+  },
+
   // Backend returns only a fresh access token (the refresh token is unchanged).
   async refreshToken(refreshToken: string): Promise<{ accessToken: string; expiresIn: number }> {
     const { data } = await apiClient.post<{ accessToken: string; expiresIn: number }>(

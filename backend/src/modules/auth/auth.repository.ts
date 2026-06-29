@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { User, RefreshToken } from '@prisma/client';
+import { User, RefreshToken, Role } from '@prisma/client';
 
 @Injectable()
 export class AuthRepository {
@@ -28,6 +28,20 @@ export class AuthRepository {
     data: Partial<{ displayName: string; avatar: string; email: string; phone: string }>,
   ): Promise<User> {
     return this.prisma.user.update({ where: { id }, data });
+  }
+
+  // Dev-only: deterministic test user per role (see AuthService.devLogin).
+  async upsertDevUser(data: {
+    lineUserId: string;
+    email: string;
+    displayName: string;
+    role: Role;
+  }): Promise<User> {
+    return this.prisma.user.upsert({
+      where: { lineUserId: data.lineUserId },
+      update: { email: data.email, displayName: data.displayName, role: data.role },
+      create: data,
+    });
   }
 
   async upsertUser(data: {

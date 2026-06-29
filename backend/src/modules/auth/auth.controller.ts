@@ -14,6 +14,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LineLoginDto, RefreshTokenDto } from './dto/line-login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { DevLoginDto } from './dto/dev-login.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser, CurrentUserPayload } from '../../common/decorators/current-user.decorator';
 
@@ -38,6 +39,14 @@ export class AuthController {
   async refresh(@Req() req: any, @Body() dto: RefreshTokenDto) {
     const { sub } = req.user;
     return this.authService.refreshAccessToken(sub, dto.refreshToken);
+  }
+
+  @Public()
+  @Post('dev/login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Dev-only login (non-production) — issues tokens without LINE' })
+  async devLogin(@Body() dto: DevLoginDto) {
+    return this.authService.devLogin(dto.role);
   }
 
   @Get('me')

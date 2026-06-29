@@ -14,7 +14,7 @@ import type { AvailabilitySlot } from "@/types";
 interface BookingCalendarProps {
   coachId: string;
   selectedSlotId: string | null;
-  onSlotSelect: (slot: AvailabilitySlot) => void;
+  onSlotSelect: (slot: AvailabilitySlot | null) => void;
 }
 
 export default function BookingCalendar({
@@ -49,9 +49,9 @@ export default function BookingCalendar({
 
   function handleEventClick(info: EventClickArg) {
     const slot = info.event.extendedProps.slot as AvailabilitySlot;
-    if (slot.status === "AVAILABLE") {
-      onSlotSelect(slot);
-    }
+    if (slot.status !== "AVAILABLE") return;
+    // Toggle: clicking the already-selected slot clears the selection.
+    onSlotSelect(slot.id === selectedSlotId ? null : slot);
   }
 
   if (isLoading) {

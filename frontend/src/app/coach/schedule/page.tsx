@@ -7,8 +7,8 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { DateSelectArg, EventClickArg, EventInput } from "@fullcalendar/core";
 import { format, addMonths } from "date-fns";
-import { Plus, Trash2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Save, Trash2, X } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,9 +17,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useMySlots, useCreateSlot, useDeleteSlot, useBlockSlot } from "@/hooks/useAvailability";
+import { useMySlots, useBulkCreateSlots, useDeleteSlot } from "@/hooks/useAvailability";
 import { formatDateTime } from "@/lib/utils";
 import type { AvailabilitySlot } from "@/types";
+
+interface PendingSlot {
+  start: string;
+  end: string;
+}
 
 export default function CoachSchedulePage() {
   const [range, setRange] = useState(() => {
@@ -29,65 +34,105 @@ export default function CoachSchedulePage() {
       to: format(addMonths(now, 2), "yyyy-MM-dd"),
     };
   });
-  const [pendingSlot, setPendingSlot] = useState<{ start: string; end: string } | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
+  // Unsaved slots the coach is drafting before a single bulk save.
+  const [pending, setPending] = useState<PendingSlot[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<AvailabilitySlot | null>(null);
 
   const { data: slots } = useMySlots(range.from, range.to);
-  const createSlot = useCreateSlot();
+  const bulkCreate = useBulkCreateSlots();
   const deleteSlot = useDeleteSlot();
-  const blockSlot = useBlockSlot();
 
-  const events: EventInput[] = (slots ?? []).map((slot) => ({
+  const savedEvents: EventInput[] = (slots ?? []).map((slot) => ({
     id: slot.id,
     start: slot.startTime,
     end: slot.endTime,
-    title: slot.status === "AVAILABLE" ? "Available" : slot.status === "BOOKED" ? "Booked" : "Blocked",
+    title:
+      slot.status === "AVAILABLE" ? "Available" : slot.status === "BOOKED" ? "Booked" : "Blocked",
     className:
       slot.status === "AVAILABLE"
         ? "fc-event-available"
         : slot.status === "BOOKED"
         ? "fc-event-booked"
         : "fc-event-blocked",
-    extendedProps: { slot },
+    extendedProps: { kind: "saved", slot },
   }));
 
-  function handleDateSelect(selectInfo: DateSelectArg) {
-    setPendingSlot({
-      start: selectInfo.startStr,
-      end: selectInfo.endStr,
-    });
+  const pendingEvents: EventInput[] = pending.map((slot, index) => ({
+    id: `pending-${index}`,
+    start: slot.start,
+    end: slot.end,
+    title: "New (unsaved)",
+    backgroundColor: "#f59e0b",
+    borderColor: "#d97706",
+    extendedProps: { kind: "pending", index },
+  }));
+
+  function handleDateSelect(info: DateSelectArg) {
+    setPending((prev) => [...prev, { start: info.startStr, end: info.endStr }]);
   }
 
   function handleEventClick(info: EventClickArg) {
-    const slot = info.event.extendedProps.slot as AvailabilitySlot;
-    setSelectedSlot(slot);
+    if (info.event.extendedProps.kind === "pending") {
+      const index = info.event.extendedProps.index as number;
+      setPending((prev) => prev.filter((_, i) => i !== index));
+    } else {
+      setDeleteTarget(info.event.extendedProps.slot as AvailabilitySlot);
+    }
   }
 
-  async function confirmCreate() {
-    if (!pendingSlot) return;
-    await createSlot.mutateAsync({
-      startTime: pendingSlot.start,
-      endTime: pendingSlot.end,
+  async function handleSave() {
+    if (pending.length === 0) return;
+    await bulkCreate.mutateAsync({
+      slots: pending.map((slot) => ({ startTime: slot.start, endTime: slot.end })),
     });
-    setPendingSlot(null);
+    setPending([]);
   }
 
   async function confirmDelete() {
-    if (!selectedSlot) return;
-    await deleteSlot.mutateAsync(selectedSlot.id);
-    setSelectedSlot(null);
+    if (!deleteTarget) return;
+    await deleteSlot.mutateAsync(deleteTarget.id);
+    setDeleteTarget(null);
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Schedule</h1>
           <p className="text-muted-foreground mt-1">
-            Select time blocks to create available slots.
+            Drag on the calendar to add time blocks, then save them all at once.
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          {pending.length > 0 && (
+            <Button variant="ghost" onClick={() => setPending([])}>
+              <X className="h-4 w-4 mr-1" />
+              Clear
+            </Button>
+          )}
+          <Button onClick={handleSave} disabled={pending.length === 0 || bulkCreate.isPending}>
+            <Save className="h-4 w-4 mr-1" />
+            {bulkCreate.isPending
+              ? "Saving..."
+              : pending.length > 0
+              ? `Save ${pending.length} slot${pending.length > 1 ? "s" : ""}`
+              : "Save"}
+          </Button>
+        </div>
       </div>
+
+      {pending.length > 0 && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          {pending.length} unsaved slot{pending.length > 1 ? "s" : ""} (orange). Click an unsaved
+          block to remove it, or Save to publish.
+        </div>
+      )}
+
+      {bulkCreate.isError && (
+        <p className="text-sm text-destructive">
+          Couldn&rsquo;t save slots. Each must be at least 15 minutes. Please try again.
+        </p>
+      )}
 
       <Card>
         <CardContent className="p-4">
@@ -99,7 +144,7 @@ export default function CoachSchedulePage() {
               center: "title",
               right: "dayGridMonth,timeGridWeek,timeGridDay",
             }}
-            events={events}
+            events={[...savedEvents, ...pendingEvents]}
             selectable
             selectMirror
             select={handleDateSelect}
@@ -119,51 +164,27 @@ export default function CoachSchedulePage() {
         </CardContent>
       </Card>
 
-      {/* Create slot dialog */}
-      <Dialog open={!!pendingSlot} onOpenChange={(open) => !open && setPendingSlot(null)}>
+      {/* Delete saved slot */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Available Slot</DialogTitle>
+            <DialogTitle>Delete this slot?</DialogTitle>
           </DialogHeader>
-          {pendingSlot && (
+          {deleteTarget && (
             <div className="py-2 space-y-2 text-sm">
-              <p><span className="text-muted-foreground">From:</span> {formatDateTime(pendingSlot.start)}</p>
-              <p><span className="text-muted-foreground">To:</span> {formatDateTime(pendingSlot.end)}</p>
+              <p><span className="text-muted-foreground">From:</span> {formatDateTime(deleteTarget.startTime)}</p>
+              <p><span className="text-muted-foreground">To:</span> {formatDateTime(deleteTarget.endTime)}</p>
+              {deleteTarget.status === "BOOKED" && (
+                <p className="text-destructive">This slot is booked and can&rsquo;t be deleted.</p>
+              )}
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingSlot(null)}>Cancel</Button>
-            <Button onClick={confirmCreate} disabled={createSlot.isPending}>
-              <Plus className="h-4 w-4 mr-1" />
-              {createSlot.isPending ? "Creating..." : "Create Slot"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Slot actions dialog */}
-      <Dialog open={!!selectedSlot} onOpenChange={(open) => !open && setSelectedSlot(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Slot Details</DialogTitle>
-          </DialogHeader>
-          {selectedSlot && (
-            <div className="py-2 space-y-2 text-sm">
-              <p><span className="text-muted-foreground">Status:</span> {selectedSlot.status}</p>
-              <p><span className="text-muted-foreground">From:</span> {formatDateTime(selectedSlot.startTime)}</p>
-              <p><span className="text-muted-foreground">To:</span> {formatDateTime(selectedSlot.endTime)}</p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedSlot(null)}>Close</Button>
-            {selectedSlot?.status === "AVAILABLE" && (
-              <Button
-                variant="destructive"
-                onClick={confirmDelete}
-                disabled={deleteSlot.isPending}
-              >
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Close</Button>
+            {deleteTarget?.status === "AVAILABLE" && (
+              <Button variant="destructive" onClick={confirmDelete} disabled={deleteSlot.isPending}>
                 <Trash2 className="h-4 w-4 mr-1" />
-                Delete Slot
+                {deleteSlot.isPending ? "Deleting..." : "Delete Slot"}
               </Button>
             )}
           </DialogFooter>

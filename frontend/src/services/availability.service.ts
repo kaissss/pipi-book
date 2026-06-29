@@ -37,8 +37,8 @@ export const availabilityService = {
     return data;
   },
 
-  async bulkCreateSlots(payload: BulkCreateSlotsPayload): Promise<AvailabilitySlot[]> {
-    const { data } = await apiClient.post<AvailabilitySlot[]>("/coaches/me/slots/bulk", payload);
+  async bulkCreateSlots(payload: BulkCreateSlotsPayload): Promise<{ created: number }> {
+    const { data } = await apiClient.post<{ created: number }>("/coaches/me/slots/bulk", payload);
     return data;
   },
 

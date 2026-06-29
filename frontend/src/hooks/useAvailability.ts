@@ -1,7 +1,11 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { availabilityService, type CreateSlotPayload } from "@/services/availability.service";
+import {
+  availabilityService,
+  type CreateSlotPayload,
+  type BulkCreateSlotsPayload,
+} from "@/services/availability.service";
 import { QUERY_KEYS } from "@/lib/constants";
 
 export function useCoachAvailability(coachId: string, from: string, to: string) {
@@ -25,6 +29,17 @@ export function useCreateSlot() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateSlotPayload) => availabilityService.createSlot(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["coach", "slots"] });
+    },
+  });
+}
+
+export function useBulkCreateSlots() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: BulkCreateSlotsPayload) =>
+      availabilityService.bulkCreateSlots(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["coach", "slots"] });
     },

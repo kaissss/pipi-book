@@ -150,7 +150,7 @@ export default function CoachSchedulePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Schedule</h1>
           <p className="text-muted-foreground mt-1">
@@ -160,14 +160,20 @@ export default function CoachSchedulePage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {selectedIds.length > 0 && (
-            <Button
-              variant="outline"
-              className="text-destructive hover:text-destructive"
-              onClick={() => setConfirmDelete(true)}
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete {selectedIds.length} selected
-            </Button>
+            <>
+              <Button variant="ghost" onClick={() => setSelectedIds([])}>
+                <X className="h-4 w-4 mr-1" />
+                Deselect
+              </Button>
+              <Button
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete {selectedIds.length} selected
+              </Button>
+            </>
           )}
           {pending.length > 0 && (
             <Button variant="ghost" onClick={() => setPending([])}>

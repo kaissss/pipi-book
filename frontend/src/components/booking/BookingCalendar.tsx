@@ -10,6 +10,7 @@ import type { EventClickArg, EventInput } from "@fullcalendar/core";
 import { format, addMonths } from "date-fns";
 import { useCoachAvailability } from "@/hooks/useAvailability";
 import { Skeleton } from "@/components/ui/skeleton";
+import { slotEventColor } from "@/lib/utils";
 import type { AvailabilitySlot } from "@/types";
 
 interface BookingCalendarProps {
@@ -50,18 +51,32 @@ export default function BookingCalendar({
   const events: EventInput[] = (slots ?? []).map((slot) => {
     const bookable = isBookable(slot);
     const selected = slot.id === selectedSlotId;
+    // Every event gets an explicit color: FullCalendar won't reliably revert an
+    // inline color back to undefined, which previously left a deselected slot
+    // looking "still selected". Selected = green; booked = blue (shared);
+    // available (bookable) = grey; unavailable (wrong length) = lighter disabled grey.
+    const unavailable = !bookable && slot.status === "AVAILABLE";
+    // Selected uses the "unsaved" amber so it stands out from available green.
+    const color = selected
+      ? "#f59e0b"
+      : unavailable
+      ? "#d1d5db"
+      : slotEventColor(slot.status);
     return {
       id: slot.id,
       start: slot.startTime,
       end: slot.endTime,
-      title: bookable ? "Available" : slot.status === "BOOKED" ? "Booked" : "Unavailable",
-      classNames: [
-        bookable ? "fc-event-available" : "fc-event-booked",
-        selected ? "ring-2 ring-primary" : "",
-      ],
+      title: selected
+        ? "Available (Selected)"
+        : bookable
+        ? "Available"
+        : slot.status === "BOOKED"
+        ? "Booked"
+        : "Unavailable",
+      backgroundColor: color,
+      borderColor: selected ? "#d97706" : color,
+      classNames: selected ? ["ring-2 ring-primary ring-offset-1"] : [],
       extendedProps: { slot },
-      backgroundColor: selected ? "#16a34a" : undefined,
-      borderColor: selected ? "#15803d" : undefined,
     };
   });
 
@@ -123,8 +138,8 @@ export default function BookingCalendar({
       />
       <p className="text-xs text-muted-foreground mt-2 text-center">
         {serviceDurationMinutes
-          ? `Click a green slot to select it. Only ${serviceDurationMinutes}-minute slots (matching your session) are bookable; gray slots are booked or a different length.`
-          : "Click a green slot to select it. Gray slots are already booked."}
+          ? `Green slots are available (${serviceDurationMinutes}-min, matching your session) — tap to select. Blue = booked; grey = a different length.`
+          : "Green slots are available — tap to select. Blue slots are booked."}
       </p>
     </div>
   );

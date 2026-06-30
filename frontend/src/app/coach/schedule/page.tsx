@@ -24,6 +24,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useMySlots, useBulkCreateSlots, useDeleteSlot } from "@/hooks/useAvailability";
+import { slotEventColor } from "@/lib/utils";
 import type { AvailabilitySlot } from "@/types";
 
 interface PendingSlot {
@@ -53,6 +54,8 @@ export default function CoachSchedulePage() {
 
   const savedEvents: EventInput[] = (slots ?? []).map((slot) => {
     const marked = selectedIds.includes(slot.id);
+    // Shared status colors (available grey, booked blue); red when marked for delete.
+    const color = marked ? "#ef4444" : slotEventColor(slot.status);
     return {
       id: slot.id,
       start: slot.startTime,
@@ -65,16 +68,8 @@ export default function CoachSchedulePage() {
         ? "Booked"
         : "Blocked",
       editable: false, // saved slots aren't dragged/resized
-      ...(marked
-        ? { backgroundColor: "#ef4444", borderColor: "#dc2626" }
-        : {}),
-      className: marked
-        ? ""
-        : slot.status === "AVAILABLE"
-        ? "fc-event-available"
-        : slot.status === "BOOKED"
-        ? "fc-event-booked"
-        : "fc-event-blocked",
+      backgroundColor: color,
+      borderColor: marked ? "#dc2626" : color,
       extendedProps: { kind: "saved", slot },
     };
   });

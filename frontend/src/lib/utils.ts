@@ -99,6 +99,22 @@ export function getPaymentStatusColor(status: string): string {
   return map[status] ?? "bg-gray-100 text-gray-800";
 }
 
+// ─── Calendar slot colors (shared by coach Schedule + member BookingCalendar) ──
+// available = grey, booked = blue, blocked = slate. Action states (selected,
+// unsaved, marked-for-delete) are layered on top per-calendar.
+export const SLOT_EVENT_COLORS = {
+  AVAILABLE: "#22c55e",
+  BOOKED: "#3b82f6",
+  BLOCKED: "#64748b",
+} as const;
+
+export function slotEventColor(status: string): string {
+  return (
+    SLOT_EVENT_COLORS[status as keyof typeof SLOT_EVENT_COLORS] ??
+    SLOT_EVENT_COLORS.AVAILABLE
+  );
+}
+
 // ─── Array helpers ────────────────────────────────────────────────────────────
 
 export function groupBy<T>(arr: T[], key: keyof T): Record<string, T[]> {

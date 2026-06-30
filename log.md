@@ -705,3 +705,19 @@ Slot = one bookable session. If a coach only made large blocks, nothing matches 
 shorter service → coaches must create slots sized to their service durations.
 Auto-splitting a big block into service-length start times was offered as a
 larger follow-up, not built.
+
+---
+
+## 2026-07-01 — Day 7 (continued): Unified calendar slot colors
+
+Shared slot styling across coach Schedule + member BookingCalendar via
+`slotEventColor` (lib/utils): available = green, booked = blue, blocked = slate.
+
+Member booking calendar:
+- available (bookable) → green
+- unavailable (wrong length) → solid light grey (disabled; replaced earlier opacity dim)
+- booked → blue
+- selected → amber (the unsaved color) + ring, title "Available (Selected)"
+
+Coach Schedule layers marked-for-delete (red) and unsaved drafts (orange) on top of
+the shared status colors. Frontend only.

@@ -680,3 +680,28 @@ Frontend-only Schedule calendar adjustments:
 - Mobile: `longPressDelay=0` (+ event/select variants) so touch drag is immediate,
   no press-and-hold. Trade-off noted: in-calendar vertical scroll on touch is
   harder with 0 delay; bump to ~150ms if it becomes annoying.
+
+---
+
+## 2026-07-01 — Day 7 (continued): Book a Session — slot/service duration matching
+
+### Bugs
+1. Could "select multiple"/pick slots that shouldn't qualify.
+2. A slot whose length didn't match the service duration was still bookable
+   (e.g. 1-hr service could book a 4-hr 18:00–22:00 block).
+
+### Fix (frontend)
+- BookingCalendar takes `serviceDurationMinutes`; `isBookable(slot)` = AVAILABLE
+  AND `slotMinutes(slot) === serviceDurationMinutes`. Non-matching slots render
+  gray/"Unavailable" and aren't clickable; selection stays single. Helper text
+  notes only matching-length slots are bookable.
+- BookingFlow passes `selectedService.durationMinutes` to the calendar.
+- Synced the booking calendar with the coach Schedule: Month+Week views only
+  (no Day), clicking a date in month view jumps to that week, 250ms touch
+  long-press.
+
+### Consequence / model
+Slot = one bookable session. If a coach only made large blocks, nothing matches a
+shorter service → coaches must create slots sized to their service durations.
+Auto-splitting a big block into service-length start times was offered as a
+larger follow-up, not built.

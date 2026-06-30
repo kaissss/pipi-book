@@ -169,6 +169,7 @@ export default function BookingFlow({ coachId }: Props) {
             coachId={coachId}
             selectedSlotId={selectedSlot?.id ?? null}
             onSlotSelect={(slot) => setSelectedSlot(slot)}
+            serviceDurationMinutes={selectedService?.durationMinutes}
           />
           <Button
             className="w-full"

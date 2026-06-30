@@ -5,6 +5,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import type { DateClickArg } from "@fullcalendar/interaction";
 import type { EventClickArg, EventInput } from "@fullcalendar/core";
 import { format, addMonths } from "date-fns";
 import { useCoachAvailability } from "@/hooks/useAvailability";
@@ -15,12 +16,19 @@ interface BookingCalendarProps {
   coachId: string;
   selectedSlotId: string | null;
   onSlotSelect: (slot: AvailabilitySlot | null) => void;
+  // Only slots whose length equals this (minutes) can be booked.
+  serviceDurationMinutes?: number;
+}
+
+function slotMinutes(slot: AvailabilitySlot): number {
+  return (new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / 60000;
 }
 
 export default function BookingCalendar({
   coachId,
   selectedSlotId,
   onSlotSelect,
+  serviceDurationMinutes,
 }: BookingCalendarProps) {
   const [range, setRange] = useState(() => {
     const now = new Date();
@@ -32,26 +40,43 @@ export default function BookingCalendar({
 
   const { data: slots, isLoading } = useCoachAvailability(coachId, range.from, range.to);
 
-  const events: EventInput[] = (slots ?? []).map((slot) => ({
-    id: slot.id,
-    start: slot.startTime,
-    end: slot.endTime,
-    title: slot.status === "BOOKED" ? "Booked" : "Available",
-    classNames: [
-      slot.status === "AVAILABLE" ? "fc-event-available" : "fc-event-booked",
-      slot.id === selectedSlotId ? "ring-2 ring-primary" : "",
-    ],
-    extendedProps: { slot },
-    interactive: slot.status === "AVAILABLE",
-    backgroundColor: slot.id === selectedSlotId ? "#16a34a" : undefined,
-    borderColor: slot.id === selectedSlotId ? "#15803d" : undefined,
-  }));
+  // A slot is bookable only if it's open AND its length matches the service.
+  function isBookable(slot: AvailabilitySlot): boolean {
+    if (slot.status !== "AVAILABLE") return false;
+    if (!serviceDurationMinutes) return true;
+    return slotMinutes(slot) === serviceDurationMinutes;
+  }
+
+  const events: EventInput[] = (slots ?? []).map((slot) => {
+    const bookable = isBookable(slot);
+    const selected = slot.id === selectedSlotId;
+    return {
+      id: slot.id,
+      start: slot.startTime,
+      end: slot.endTime,
+      title: bookable ? "Available" : slot.status === "BOOKED" ? "Booked" : "Unavailable",
+      classNames: [
+        bookable ? "fc-event-available" : "fc-event-booked",
+        selected ? "ring-2 ring-primary" : "",
+      ],
+      extendedProps: { slot },
+      backgroundColor: selected ? "#16a34a" : undefined,
+      borderColor: selected ? "#15803d" : undefined,
+    };
+  });
 
   function handleEventClick(info: EventClickArg) {
     const slot = info.event.extendedProps.slot as AvailabilitySlot;
-    if (slot.status !== "AVAILABLE") return;
+    if (!isBookable(slot)) return;
     // Toggle: clicking the already-selected slot clears the selection.
     onSlotSelect(slot.id === selectedSlotId ? null : slot);
+  }
+
+  // In month view, clicking a date jumps to that week's schedule.
+  function handleDateClick(info: DateClickArg) {
+    if (info.view.type === "dayGridMonth") {
+      info.view.calendar.changeView("timeGridWeek", info.date);
+    }
   }
 
   if (isLoading) {
@@ -71,10 +96,12 @@ export default function BookingCalendar({
         headerToolbar={{
           left: "prev,next today",
           center: "title",
-          right: "dayGridMonth,timeGridWeek,timeGridDay",
+          right: "dayGridMonth,timeGridWeek",
         }}
         events={events}
         eventClick={handleEventClick}
+        dateClick={handleDateClick}
+        longPressDelay={250}
         height="auto"
         expandRows
         slotMinTime="07:00:00"
@@ -95,7 +122,9 @@ export default function BookingCalendar({
         eventDisplay="block"
       />
       <p className="text-xs text-muted-foreground mt-2 text-center">
-        Click a green slot to select it. Gray slots are already booked.
+        {serviceDurationMinutes
+          ? `Click a green slot to select it. Only ${serviceDurationMinutes}-minute slots (matching your session) are bookable; gray slots are booked or a different length.`
+          : "Click a green slot to select it. Gray slots are already booked."}
       </p>
     </div>
   );

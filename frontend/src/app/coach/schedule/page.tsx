@@ -227,10 +227,10 @@ export default function CoachSchedulePage() {
             selectMirror
             editable
             eventResizableFromStart
-            // Drag immediately on touch instead of requiring a long-press.
-            longPressDelay={0}
-            eventLongPressDelay={0}
-            selectLongPressDelay={0}
+            // Short press-and-hold on touch (250ms) — quick to drag but still
+            // lets vertical scrolling through the calendar work. eventLongPressDelay
+            // and selectLongPressDelay inherit this value.
+            longPressDelay={250}
             select={handleDateSelect}
             dateClick={handleDateClick}
             eventClick={handleEventClick}

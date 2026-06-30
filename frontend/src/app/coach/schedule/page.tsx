@@ -5,6 +5,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import type { DateClickArg } from "@fullcalendar/interaction";
 import type {
   DateSelectArg,
   EventClickArg,
@@ -82,7 +83,7 @@ export default function CoachSchedulePage() {
     id: slot.id,
     start: slot.start,
     end: slot.end,
-    title: "New (drag / resize)",
+    title: "Unsaved",
     backgroundColor: "#f59e0b",
     borderColor: "#d97706",
     editable: true, // draggable + resizable
@@ -90,8 +91,17 @@ export default function CoachSchedulePage() {
   }));
 
   function handleDateSelect(info: DateSelectArg) {
+    // Month view is navigation-only; create slots in week view.
+    if (info.view.type === "dayGridMonth") return;
     const id = `p${pendingSeq.current++}`;
     setPending((prev) => [...prev, { id, start: info.startStr, end: info.endStr }]);
+  }
+
+  // In month view, clicking a date jumps to that week's schedule.
+  function handleDateClick(info: DateClickArg) {
+    if (info.view.type === "dayGridMonth") {
+      info.view.calendar.changeView("timeGridWeek", info.date);
+    }
   }
 
   // Drag-move or resize of an unsaved slot.
@@ -204,14 +214,19 @@ export default function CoachSchedulePage() {
             headerToolbar={{
               left: "prev,next today",
               center: "title",
-              right: "dayGridMonth,timeGridWeek,timeGridDay",
+              right: "dayGridMonth,timeGridWeek",
             }}
             events={[...savedEvents, ...pendingEvents]}
             selectable
             selectMirror
             editable
             eventResizableFromStart
+            // Drag immediately on touch instead of requiring a long-press.
+            longPressDelay={0}
+            eventLongPressDelay={0}
+            selectLongPressDelay={0}
             select={handleDateSelect}
+            dateClick={handleDateClick}
             eventClick={handleEventClick}
             eventChange={handleEventChange}
             height="auto"

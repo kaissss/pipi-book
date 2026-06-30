@@ -667,3 +667,16 @@ Coach Schedule calendar improvements (frontend only):
 
 Batch delete loops `deleteSlot` per id (Promise.all) — no bulk-delete endpoint
 yet; fine for typical counts.
+
+---
+
+## 2026-07-01 — Day 7: Schedule UX tweaks (label, views, mobile drag)
+
+Frontend-only Schedule calendar adjustments:
+- Draft slot label changed to "Unsaved" (was "New (drag / resize)").
+- Toolbar views: Month + Week only (removed Day). Month view is navigation-only —
+  clicking a date jumps to that week (`dateClick` → changeView timeGridWeek);
+  dragging in month view no longer creates slots (guarded in handleDateSelect).
+- Mobile: `longPressDelay=0` (+ event/select variants) so touch drag is immediate,
+  no press-and-hold. Trade-off noted: in-calendar vertical scroll on touch is
+  harder with 0 delay; bump to ~150ms if it becomes annoying.

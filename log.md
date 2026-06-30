@@ -610,3 +610,60 @@ yielding localhost; Windows env scopes were all empty → pointed at Prisma's ea
 real env vars (which win over both Prisma's and Nest's `.env`), then runs `start:dev`.
 Added `npm run start:local`. Verified: `Access-Control-Allow-Origin: http://localhost:3000`.
 Use `start:local` for local dev; `.env` untouched.
+
+---
+
+## 2026-06-30 — Day 6 (continued): Dev login debug + local-run fix
+
+### Why dev login "wasn't working" locally
+Long debug. Backend endpoint worked via curl (200) but the browser was CORS-blocked.
+Chased it down: nothing was wrong with the code — `process.env` had the deployed
+`NODE_ENV=production` + `CORS_ORIGINS=<vercel>` at runtime, so the local browser
+origin was rejected.
+
+Root cause: **Prisma auto-loads `.env` (only `.env`, never `.env.local`) at import
+time**, populating `process.env` before NestJS ConfigModule runs. `dotenv` never
+overrides an already-set var, so `.env.local` could only add NEW keys
+(`DEV_LOGIN_ENABLED` worked) but never override shared ones (`CORS_ORIGINS`,
+`NODE_ENV`) — leaving local CORS pinned to the prod origin.
+
+Compounding noise during debugging: a stale `node dist/main` (a `start:prod` build)
+kept holding port 4000 so the dev server's changes never took effect; killed it.
+`nest start --watch` also does NOT reload on `.env` changes — env edits need a full
+restart.
+
+### Fix
+- `backend/scripts/dev-local.js` + `npm run start:local`: sets
+  NODE_ENV/CORS_ORIGINS/FRONTEND_URL/DEV_LOGIN_ENABLED as REAL env vars (which win
+  over both Prisma's and Nest's `.env` loads), then runs start:dev. Verified:
+  `Access-Control-Allow-Origin: http://localhost:3000`.
+- Gating switched from NODE_ENV to explicit flags earlier (DEV_LOGIN_ENABLED /
+  NEXT_PUBLIC_DEV_LOGIN) so it works in local production builds too.
+
+### Cleanup (code review)
+- Removed `backend/.env.local` — superseded by `start:local`, and misleading (can't
+  override CORS/NODE_ENV due to Prisma's early load).
+- Corrected `devLogin` docblock/log wording (gated on DEV_LOGIN_ENABLED, not NODE_ENV).
+
+### Lesson
+`.env.local` is unreliable for any key also defined in `.env` when Prisma is in the
+app — Prisma's import-time `.env` load wins. For local overrides of shared keys, set
+real env vars (the `start:local` wrapper), not `.env.local`.
+
+---
+
+## 2026-06-30 — Day 6 (continued): Schedule UX — drag/resize + multi-delete
+
+Coach Schedule calendar improvements (frontend only):
+- Unsaved (draft) slots are draggable and resizable from BOTH ends
+  (`editable` + `eventResizableFromStart`); `eventChange` writes the new
+  start/end back to the draft.
+- Available saved slots are click-to-multi-select (turn red "will delete");
+  a "Delete N selected" button batch-deletes after a confirm dialog. Booked/
+  blocked slots aren't selectable.
+- Interaction map: drag empty = new draft · drag/resize orange = adjust draft ·
+  click orange = remove draft · click green = mark for deletion · Save commits
+  drafts · Delete N selected removes marked.
+
+Batch delete loops `deleteSlot` per id (Promise.all) — no bulk-delete endpoint
+yet; fine for typical counts.

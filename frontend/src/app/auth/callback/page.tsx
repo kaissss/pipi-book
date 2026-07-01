@@ -8,11 +8,13 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { useLineCallback } from "@/hooks/useAuth";
 import { getStoredState, clearState } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n";
 import Link from "next/link";
 
 function AuthCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { t } = useTranslation();
   const { mutate: handleCallback, isPending, error, isSuccess } = useLineCallback();
   const calledRef = useRef(false);
 
@@ -53,12 +55,12 @@ function AuthCallbackContent() {
           <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="h-6 w-6 text-destructive" />
           </div>
-          <h2 className="text-xl font-semibold mb-2">Login Failed</h2>
+          <h2 className="text-xl font-semibold mb-2">{t("auth.callback.failedTitle")}</h2>
           <p className="text-muted-foreground text-sm mb-6">
-            We could not complete your LINE login. Please try again.
+            {t("auth.callback.failedBody")}
           </p>
           <Button asChild>
-            <Link href="/auth/login">Try Again</Link>
+            <Link href="/auth/login">{t("auth.callback.tryAgain")}</Link>
           </Button>
         </div>
       </div>
@@ -70,7 +72,11 @@ function AuthCallbackContent() {
       <div className="text-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
         <p className="text-muted-foreground">
-          {isPending ? "Signing you in..." : isSuccess ? "Redirecting..." : "Verifying..."}
+          {isPending
+            ? t("auth.callback.signingIn")
+            : isSuccess
+            ? t("auth.callback.redirecting")
+            : t("auth.callback.verifying")}
         </p>
       </div>
     </div>

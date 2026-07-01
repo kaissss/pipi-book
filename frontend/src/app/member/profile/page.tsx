@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { getInitials } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 
 export default function MemberProfilePage() {
+  const { t } = useTranslation();
   const { user, updateProfile, isUpdatingProfile, updateProfileError } = useAuth();
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
@@ -35,8 +37,8 @@ export default function MemberProfilePage() {
   return (
     <div className="space-y-6 max-w-xl">
       <div>
-        <h1 className="text-2xl font-bold">Profile</h1>
-        <p className="text-muted-foreground mt-1">Manage your account information.</p>
+        <h1 className="text-2xl font-bold">{t("member.profile.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("member.profile.subtitle")}</p>
       </div>
 
       {/* Avatar */}
@@ -51,10 +53,12 @@ export default function MemberProfilePage() {
           <div>
             <p className="font-medium">{user?.displayName}</p>
             <p className="text-sm text-muted-foreground capitalize">
-              {user?.role?.toLowerCase()} account
+              {t("member.profile.accountSuffix", {
+                role: user?.role ? t(`common.roles.${user.role}`) : "",
+              })}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Profile photo synced from LINE
+              {t("member.profile.photoSyncedFromLine")}
             </p>
           </div>
         </CardContent>
@@ -63,13 +67,13 @@ export default function MemberProfilePage() {
       {/* Edit form */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Personal Information</CardTitle>
-          <CardDescription>Update your display name and contact details.</CardDescription>
+          <CardTitle className="text-base">{t("member.profile.personalInformation")}</CardTitle>
+          <CardDescription>{t("member.profile.personalInformationDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSave} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Display Name</Label>
+              <Label htmlFor="name">{t("member.profile.displayName")}</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -83,14 +87,14 @@ export default function MemberProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("member.profile.email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
                   className="pl-9"
-                  placeholder="your@email.com"
+                  placeholder={t("member.profile.emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -98,14 +102,14 @@ export default function MemberProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{t("member.profile.phone")}</Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="phone"
                   type="tel"
                   className="pl-9"
-                  placeholder="+886 900 000 000"
+                  placeholder={t("member.profile.phonePlaceholder")}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
@@ -113,12 +117,16 @@ export default function MemberProfilePage() {
             </div>
 
             {updateProfileError && (
-              <p className="text-sm text-destructive">Failed to update profile.</p>
+              <p className="text-sm text-destructive">{t("member.profile.updateError")}</p>
             )}
 
             <Button type="submit" disabled={isUpdatingProfile} className="w-full sm:w-auto">
               <Save className="h-4 w-4 mr-2" />
-              {isUpdatingProfile ? "Saving..." : saved ? "Saved!" : "Save Changes"}
+              {isUpdatingProfile
+                ? t("member.profile.saving")
+                : saved
+                  ? t("member.profile.saved")
+                  : t("member.profile.saveChanges")}
             </Button>
           </form>
         </CardContent>

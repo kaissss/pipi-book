@@ -8,8 +8,10 @@ import BookingCard from "@/components/booking/BookingCard";
 import { useAuth } from "@/hooks/useAuth";
 import { usePiPiBookings, useConfirmBooking } from "@/hooks/useBooking";
 import { formatCurrency } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 
 export default function CoachDashboardPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const today = format(new Date(), "yyyy-MM-dd");
 
@@ -30,7 +32,7 @@ export default function CoachDashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">
-          Good {getTimeOfDay()}, {user?.displayName?.split(" ")[0]}!
+          {t(greetingKey(), { name: user?.displayName?.split(" ")[0] ?? "" })}
         </h1>
         <p className="text-muted-foreground mt-1">
           {format(new Date(), "EEEE, MMMM d")}
@@ -46,7 +48,7 @@ export default function CoachDashboardPage() {
             </div>
             <div>
               <p className="text-xl font-bold">{todayBookings?.total ?? 0}</p>
-              <p className="text-xs text-muted-foreground">Today's sessions</p>
+              <p className="text-xs text-muted-foreground">{t("coachPortal.dashboard.todaysSessions")}</p>
             </div>
           </CardContent>
         </Card>
@@ -57,7 +59,7 @@ export default function CoachDashboardPage() {
             </div>
             <div>
               <p className="text-xl font-bold">{pending?.total ?? 0}</p>
-              <p className="text-xs text-muted-foreground">Pending confirm</p>
+              <p className="text-xs text-muted-foreground">{t("coachPortal.dashboard.pendingConfirm")}</p>
             </div>
           </CardContent>
         </Card>
@@ -68,7 +70,7 @@ export default function CoachDashboardPage() {
             </div>
             <div>
               <p className="text-xl font-bold">{formatCurrency(totalRevenue)}</p>
-              <p className="text-xs text-muted-foreground">Today's revenue</p>
+              <p className="text-xs text-muted-foreground">{t("coachPortal.dashboard.todaysRevenue")}</p>
             </div>
           </CardContent>
         </Card>
@@ -79,7 +81,7 @@ export default function CoachDashboardPage() {
             </div>
             <div>
               <p className="text-xl font-bold">{confirmed?.total ?? 0}</p>
-              <p className="text-xs text-muted-foreground">Upcoming confirmed</p>
+              <p className="text-xs text-muted-foreground">{t("coachPortal.dashboard.upcomingConfirmed")}</p>
             </div>
           </CardContent>
         </Card>
@@ -87,14 +89,14 @@ export default function CoachDashboardPage() {
 
       {/* Today's schedule */}
       <div>
-        <h2 className="font-semibold text-lg mb-4">Today's Schedule</h2>
+        <h2 className="font-semibold text-lg mb-4">{t("coachPortal.dashboard.todaysSchedule")}</h2>
         {isLoading && (
           <div className="space-y-3">
             {[1, 2].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
           </div>
         )}
         {todayBookings?.data.length === 0 && (
-          <p className="text-muted-foreground text-sm">No sessions scheduled for today.</p>
+          <p className="text-muted-foreground text-sm">{t("coachPortal.dashboard.noSessionsToday")}</p>
         )}
         {todayBookings && todayBookings.data.length > 0 && (
           <div className="space-y-3">
@@ -113,9 +115,9 @@ export default function CoachDashboardPage() {
   );
 }
 
-function getTimeOfDay(): string {
+function greetingKey(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return "morning";
-  if (hour < 17) return "afternoon";
-  return "evening";
+  if (hour < 12) return "coachPortal.dashboard.greetingMorning";
+  if (hour < 17) return "coachPortal.dashboard.greetingAfternoon";
+  return "coachPortal.dashboard.greetingEvening";
 }

@@ -11,8 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMyCoachProfile, useUpdateCoachProfile } from "@/hooks/useCoach";
 import { SPECIALTIES, LANGUAGES } from "@/lib/constants";
+import { useTranslation } from "@/i18n";
 
 export default function CoachProfilePage() {
+  const { t } = useTranslation();
   const { data: coach, isLoading } = useMyCoachProfile();
   const updateProfile = useUpdateCoachProfile();
 
@@ -74,28 +76,28 @@ export default function CoachProfilePage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold">Coach Profile</h1>
-        <p className="text-muted-foreground mt-1">How clients see you on PiPiBook.</p>
+        <h1 className="text-2xl font-bold">{t("coachPortal.profile.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("coachPortal.profile.subtitle")}</p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">About You</CardTitle>
+            <CardTitle className="text-base">{t("coachPortal.profile.aboutYou")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Bio</Label>
+              <Label>{t("coachPortal.profile.bio")}</Label>
               <Textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="Tell potential clients about your background, approach, and what you help with..."
+                placeholder={t("coachPortal.profile.bioPlaceholder")}
                 rows={5}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Years of Experience</Label>
+                <Label>{t("coachPortal.profile.yearsOfExperience")}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -104,16 +106,16 @@ export default function CoachProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Location</Label>
+                <Label>{t("coachPortal.profile.location")}</Label>
                 <Input
-                  placeholder="e.g., Taipei, Taiwan"
+                  placeholder={t("coachPortal.profile.locationPlaceholder")}
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Timezone</Label>
+              <Label>{t("coachPortal.profile.timezone")}</Label>
               <Input
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
@@ -125,8 +127,8 @@ export default function CoachProfilePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Specialties</CardTitle>
-            <CardDescription>Select all that apply.</CardDescription>
+            <CardTitle className="text-base">{t("coachPortal.profile.specialties")}</CardTitle>
+            <CardDescription>{t("coachPortal.profile.specialtiesHelper")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
@@ -137,7 +139,7 @@ export default function CoachProfilePage() {
                   className="cursor-pointer hover:bg-primary/80"
                   onClick={() => toggleSpecialty(s)}
                 >
-                  {s}
+                  {t(`taxonomy.specialty.${s}`)}
                 </Badge>
               ))}
             </div>
@@ -146,7 +148,7 @@ export default function CoachProfilePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Languages</CardTitle>
+            <CardTitle className="text-base">{t("coachPortal.profile.languages")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
@@ -157,7 +159,7 @@ export default function CoachProfilePage() {
                   className="cursor-pointer hover:bg-primary/80"
                   onClick={() => toggleLanguage(l)}
                 >
-                  {l}
+                  {t(`taxonomy.language.${l}`)}
                 </Badge>
               ))}
             </div>
@@ -166,26 +168,28 @@ export default function CoachProfilePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Certifications</CardTitle>
-            <CardDescription>One per line.</CardDescription>
+            <CardTitle className="text-base">{t("coachPortal.profile.certifications")}</CardTitle>
+            <CardDescription>{t("coachPortal.profile.certificationsHelper")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Textarea
               value={certifications}
               onChange={(e) => setCertifications(e.target.value)}
-              placeholder="ICF PCC Certification&#10;NLP Practitioner&#10;..."
+              placeholder={t("coachPortal.profile.certificationsPlaceholder")}
               rows={4}
             />
           </CardContent>
         </Card>
 
         {updateProfile.error && (
-          <p className="text-sm text-destructive">Failed to update profile. Please try again.</p>
+          <p className="text-sm text-destructive">{t("coachPortal.profile.saveError")}</p>
         )}
 
         <Button type="submit" disabled={updateProfile.isPending}>
           <Save className="h-4 w-4 mr-2" />
-          {updateProfile.isPending ? "Saving..." : "Save Profile"}
+          {updateProfile.isPending
+            ? t("coachPortal.profile.saving")
+            : t("coachPortal.profile.saveProfile")}
         </Button>
       </form>
     </div>

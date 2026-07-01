@@ -721,3 +721,46 @@ Member booking calendar:
 
 Coach Schedule layers marked-for-delete (red) and unsaved drafts (orange) on top of
 the shared status colors. Frontend only.
+
+---
+
+## 2026-07-01 — Day 7 (continued): i18n — English + Traditional Chinese
+
+Added a client-side i18n system (cookie/localStorage, no URL routing).
+
+Approach (user decisions): toggle + cookie (no `[locale]` routes); auto-detect
+from the browser on first visit, then remember the manual choice. Default falls
+back to English when detection is ambiguous.
+
+Core (`frontend/src/i18n/`):
+- `config.ts` — locales `en` / `zh-TW`, `matchBrowserLocale` (any `zh*` →
+  Traditional), persistence keys.
+- `translate.ts` — dot-path lookup + `{var}` interpolation, English fallback,
+  dev-only missing-key `console.warn`.
+- `I18nProvider.tsx` — renders DEFAULT_LOCALE first (no hydration mismatch),
+  resolves real locale on mount, writes `<html lang>` + cookie + localStorage.
+- `useTranslation()` → `{ t, locale, setLocale }`.
+- `messages/*` split by feature namespace; each `zhTW` is typed `: typeof en`,
+  so a missing/renamed key in either language is a COMPILE ERROR (the safety net).
+
+Switcher: `LanguageSwitcher` — globe dropdown (desktop navbar) + inline buttons
+(mobile menu).
+
+Coverage: chrome (navbar/sidebar/footer/layouts), home, login + LINE callback,
+booking flow, coach/member/admin portals, public coach discovery, terms/privacy/
+help. Status/role labels centralized in `common.*`; specialties/languages in
+`taxonomy.*` (labels localized, stored values stay English).
+
+Built the bulk via 6 parallel sub-passes over disjoint file sets, each owning its
+own namespace file — index.ts pre-registered all namespaces so no shared-file
+conflicts.
+
+Cleanups: removed dead `BOOKING_STATUS_LABELS` / `COACH_STATUS_LABELS` from
+constants (superseded by i18n keys); fixed a non-localizable enum render on the
+coach card (`service.type.replace().toLowerCase()` → `serviceType` lookup).
+
+Trade-off: legal pages (`/terms`, `/privacy`, `/help`) became client components
+to use `t()`, losing per-page metadata titles; `/coaches` kept server metadata by
+moving its heading into the client `CoachList`.
+
+Verified: `tsc --noEmit` clean; `next build` passes (all 21 routes). Frontend only.

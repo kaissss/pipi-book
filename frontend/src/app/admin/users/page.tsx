@@ -12,8 +12,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAdminUsers, useSuspendUser, useActivateUser } from "@/hooks/useAdmin";
 import { getInitials, formatDate } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 
 export default function AdminUsersPage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("all");
   const [page, setPage] = useState(1);
@@ -30,8 +32,8 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Users</h1>
-        <p className="text-muted-foreground mt-1">Manage all platform users.</p>
+        <h1 className="text-2xl font-bold">{t("admin.users.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("admin.users.subtitle")}</p>
       </div>
 
       {/* Filters */}
@@ -40,7 +42,7 @@ export default function AdminUsersPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             className="pl-9"
-            placeholder="Search by name or email..."
+            placeholder={t("admin.users.searchPlaceholder")}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
@@ -50,10 +52,10 @@ export default function AdminUsersPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All roles</SelectItem>
-            <SelectItem value="STUDENT">Students</SelectItem>
-            <SelectItem value="COACH">Coaches</SelectItem>
-            <SelectItem value="ADMIN">Admins</SelectItem>
+            <SelectItem value="all">{t("admin.users.allRoles")}</SelectItem>
+            <SelectItem value="STUDENT">{t("admin.users.students")}</SelectItem>
+            <SelectItem value="COACH">{t("admin.users.coaches")}</SelectItem>
+            <SelectItem value="ADMIN">{t("admin.users.admins")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -61,7 +63,7 @@ export default function AdminUsersPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            {data ? `${data.total} users` : "Users"}
+            {data ? t("admin.users.count", { n: data.total }) : t("admin.users.fallbackTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -76,11 +78,11 @@ export default function AdminUsersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("admin.users.colUser")}</TableHead>
+                  <TableHead>{t("admin.users.colRole")}</TableHead>
+                  <TableHead>{t("admin.users.colJoined")}</TableHead>
+                  <TableHead>{t("admin.users.colStatus")}</TableHead>
+                  <TableHead>{t("admin.users.colActions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -103,8 +105,8 @@ export default function AdminUsersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-xs capitalize">
-                        {user.role.toLowerCase()}
+                      <Badge variant="outline" className="text-xs">
+                        {t(`common.roles.${user.role}`)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -115,7 +117,7 @@ export default function AdminUsersPage() {
                         variant={user.status === "ACTIVE" ? "default" : "secondary"}
                         className="text-xs"
                       >
-                        {user.status === "ACTIVE" ? "Active" : "Suspended"}
+                        {user.status === "ACTIVE" ? t("admin.users.statusActive") : t("admin.users.statusSuspended")}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -128,7 +130,7 @@ export default function AdminUsersPage() {
                             onClick={() => suspendUser.mutate(user.id)}
                           >
                             <UserX className="h-3.5 w-3.5 mr-1" />
-                            Suspend
+                            {t("admin.users.suspend")}
                           </Button>
                         ) : (
                           <Button
@@ -138,7 +140,7 @@ export default function AdminUsersPage() {
                             onClick={() => activateUser.mutate(user.id)}
                           >
                             <UserCheck className="h-3.5 w-3.5 mr-1" />
-                            Activate
+                            {t("admin.users.activate")}
                           </Button>
                         )
                       )}
@@ -157,7 +159,7 @@ export default function AdminUsersPage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
               >
-                Previous
+                {t("admin.users.previous")}
               </Button>
               <span className="text-sm text-muted-foreground self-center">
                 {page} / {data.totalPages}
@@ -168,7 +170,7 @@ export default function AdminUsersPage() {
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= data.totalPages}
               >
-                Next
+                {t("admin.users.next")}
               </Button>
             </div>
           )}

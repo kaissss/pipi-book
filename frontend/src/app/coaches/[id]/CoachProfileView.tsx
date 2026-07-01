@@ -6,12 +6,14 @@ import { useCoach } from "@/hooks/useCoach";
 import CoachProfile from "@/components/coach/CoachProfile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n";
 
 interface Props {
   coachId: string;
 }
 
 export default function CoachProfileView({ coachId }: Props) {
+  const { t } = useTranslation();
   const { data: coach, isLoading, error } = useCoach(coachId);
 
   if (isLoading) {
@@ -33,9 +35,9 @@ export default function CoachProfileView({ coachId }: Props) {
   if (error || !coach) {
     return (
       <div className="text-center py-16">
-        <p className="text-muted-foreground mb-4">Coach not found.</p>
+        <p className="text-muted-foreground mb-4">{t("coachPublic.profile.notFound")}</p>
         <Button asChild variant="outline">
-          <Link href="/coaches">Back to coaches</Link>
+          <Link href="/coaches">{t("coachPublic.profile.backLink")}</Link>
         </Button>
       </div>
     );
@@ -46,7 +48,7 @@ export default function CoachProfileView({ coachId }: Props) {
       <Button asChild variant="ghost" size="sm" className="-ml-2">
         <Link href="/coaches">
           <ArrowLeft className="h-4 w-4 mr-1" />
-          All coaches
+          {t("coachPublic.profile.backToCoaches")}
         </Link>
       </Button>
       <CoachProfile coach={coach} />

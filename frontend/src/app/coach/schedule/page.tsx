@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { useMySlots, useBulkCreateSlots, useDeleteSlot } from "@/hooks/useAvailability";
 import { slotEventColor } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 import type { AvailabilitySlot } from "@/types";
 
 interface PendingSlot {
@@ -34,6 +35,7 @@ interface PendingSlot {
 }
 
 export default function CoachSchedulePage() {
+  const { t } = useTranslation();
   const [range, setRange] = useState(() => {
     const now = new Date();
     return {
@@ -61,12 +63,12 @@ export default function CoachSchedulePage() {
       start: slot.startTime,
       end: slot.endTime,
       title: marked
-        ? "Selected — will delete"
+        ? t("coachPortal.schedule.slotStatusSelected")
         : slot.status === "AVAILABLE"
-        ? "Available"
+        ? t("coachPortal.schedule.slotStatusAvailable")
         : slot.status === "BOOKED"
-        ? "Booked"
-        : "Blocked",
+        ? t("coachPortal.schedule.slotStatusBooked")
+        : t("coachPortal.schedule.slotStatusBlocked"),
       editable: false, // saved slots aren't dragged/resized
       backgroundColor: color,
       borderColor: marked ? "#dc2626" : color,
@@ -78,7 +80,7 @@ export default function CoachSchedulePage() {
     id: slot.id,
     start: slot.start,
     end: slot.end,
-    title: "Unsaved",
+    title: t("coachPortal.schedule.slotStatusUnsaved"),
     backgroundColor: "#f59e0b",
     borderColor: "#d97706",
     editable: true, // draggable + resizable
@@ -147,10 +149,9 @@ export default function CoachSchedulePage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Schedule</h1>
+          <h1 className="text-2xl font-bold">{t("coachPortal.schedule.title")}</h1>
           <p className="text-muted-foreground mt-1">
-            Drag to add slots, then save. Drag/resize unsaved slots to adjust; click
-            available slots to select them for deletion.
+            {t("coachPortal.schedule.subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -158,7 +159,7 @@ export default function CoachSchedulePage() {
             <>
               <Button variant="ghost" onClick={() => setSelectedIds([])}>
                 <X className="h-4 w-4 mr-1" />
-                Deselect
+                {t("coachPortal.schedule.deselect")}
               </Button>
               <Button
                 variant="outline"
@@ -166,23 +167,23 @@ export default function CoachSchedulePage() {
                 onClick={() => setConfirmDelete(true)}
               >
                 <Trash2 className="h-4 w-4 mr-1" />
-                Delete {selectedIds.length} selected
+                {t("coachPortal.schedule.deleteSelected", { count: selectedIds.length })}
               </Button>
             </>
           )}
           {pending.length > 0 && (
             <Button variant="ghost" onClick={() => setPending([])}>
               <X className="h-4 w-4 mr-1" />
-              Clear
+              {t("coachPortal.schedule.clear")}
             </Button>
           )}
           <Button onClick={handleSave} disabled={pending.length === 0 || bulkCreate.isPending}>
             <Save className="h-4 w-4 mr-1" />
             {bulkCreate.isPending
-              ? "Saving..."
+              ? t("coachPortal.schedule.saving")
               : pending.length > 0
-              ? `Save ${pending.length} slot${pending.length > 1 ? "s" : ""}`
-              : "Save"}
+              ? t("coachPortal.schedule.saveCount", { count: pending.length })
+              : t("coachPortal.schedule.save")}
           </Button>
         </div>
       </div>
@@ -191,19 +192,18 @@ export default function CoachSchedulePage() {
         <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
           {pending.length > 0 && (
             <span>
-              {pending.length} unsaved slot{pending.length > 1 ? "s" : ""} (orange) — drag to
-              move, drag the top/bottom edge to resize, click to remove.{" "}
+              {t("coachPortal.schedule.bannerUnsaved", { count: pending.length })}
             </span>
           )}
           {selectedIds.length > 0 && (
-            <span>{selectedIds.length} selected for deletion (red).</span>
+            <span>{t("coachPortal.schedule.bannerSelected", { count: selectedIds.length })}</span>
           )}
         </div>
       )}
 
       {bulkCreate.isError && (
         <p className="text-sm text-destructive">
-          Couldn&rsquo;t save slots. Each must be at least 15 minutes. Please try again.
+          {t("coachPortal.schedule.saveError")}
         </p>
       )}
 
@@ -250,17 +250,17 @@ export default function CoachSchedulePage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Delete {selectedIds.length} slot{selectedIds.length > 1 ? "s" : ""}?
+              {t("coachPortal.schedule.deleteDialogTitle", { count: selectedIds.length })}
             </DialogTitle>
           </DialogHeader>
           <p className="py-2 text-sm text-muted-foreground">
-            This permanently removes the selected available slots. This can&rsquo;t be undone.
+            {t("coachPortal.schedule.deleteDialogBody")}
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setConfirmDelete(false)}>{t("common.actions.cancel")}</Button>
             <Button variant="destructive" onClick={handleDeleteSelected} disabled={deleteSlot.isPending}>
               <Trash2 className="h-4 w-4 mr-1" />
-              {deleteSlot.isPending ? "Deleting..." : "Delete"}
+              {deleteSlot.isPending ? t("coachPortal.schedule.deleting") : t("common.actions.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

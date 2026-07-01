@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCoaches } from "@/hooks/useCoach";
 import { SPECIALTIES } from "@/lib/constants";
+import { useTranslation } from "@/i18n";
 
 export default function CoachList() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [specialty, setSpecialty] = useState<string>("");
   const [minRating, setMinRating] = useState<string>("");
@@ -26,12 +28,18 @@ export default function CoachList() {
 
   return (
     <div className="space-y-6">
+      {/* Heading */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">{t("coachPublic.list.title")}</h1>
+        <p className="text-muted-foreground">{t("coachPublic.list.subtitle")}</p>
+      </div>
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search coaches..."
+            placeholder={t("coachPublic.list.searchPlaceholder")}
             className="pl-9"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -39,23 +47,23 @@ export default function CoachList() {
         </div>
         <Select value={specialty} onValueChange={(v) => { setSpecialty(v === "all" ? "" : v); setPage(1); }}>
           <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Specialty" />
+            <SelectValue placeholder={t("coachPublic.list.specialtyPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All specialties</SelectItem>
+            <SelectItem value="all">{t("coachPublic.list.allSpecialties")}</SelectItem>
             {SPECIALTIES.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
+              <SelectItem key={s} value={s}>{t(`taxonomy.specialty.${s}`)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={minRating} onValueChange={(v) => { setMinRating(v === "any" ? "" : v); setPage(1); }}>
           <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Min rating" />
+            <SelectValue placeholder={t("coachPublic.list.minRatingPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="any">Any rating</SelectItem>
-            <SelectItem value="4">4+ stars</SelectItem>
-            <SelectItem value="4.5">4.5+ stars</SelectItem>
+            <SelectItem value="any">{t("coachPublic.list.anyRating")}</SelectItem>
+            <SelectItem value="4">{t("coachPublic.list.ratingFourPlus")}</SelectItem>
+            <SelectItem value="4.5">{t("coachPublic.list.ratingFourHalfPlus")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -63,7 +71,9 @@ export default function CoachList() {
       {/* Results count */}
       {data && (
         <p className="text-sm text-muted-foreground">
-          {data.total} coach{data.total !== 1 ? "es" : ""} found
+          {data.total !== 1
+            ? t("coachPublic.list.resultCount", { count: data.total })
+            : t("coachPublic.list.resultCountOne", { count: data.total })}
         </p>
       )}
 
@@ -87,7 +97,7 @@ export default function CoachList() {
       {/* Error state */}
       {error && (
         <div className="text-center py-12 text-muted-foreground">
-          <p className="text-sm">Failed to load coaches. Please try again.</p>
+          <p className="text-sm">{t("coachPublic.list.loadError")}</p>
         </div>
       )}
 
@@ -104,8 +114,8 @@ export default function CoachList() {
       {data && data.data.length === 0 && (
         <div className="text-center py-16 text-muted-foreground">
           <SlidersHorizontal className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">No coaches match your filters</p>
-          <p className="text-sm mt-1">Try adjusting your search or filters</p>
+          <p className="font-medium">{t("coachPublic.list.emptyTitle")}</p>
+          <p className="text-sm mt-1">{t("coachPublic.list.emptySubtitle")}</p>
         </div>
       )}
 
@@ -118,10 +128,10 @@ export default function CoachList() {
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
           >
-            Previous
+            {t("coachPublic.list.previous")}
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page {page} of {data.totalPages}
+            {t("coachPublic.list.pageInfo", { page, totalPages: data.totalPages })}
           </span>
           <Button
             variant="outline"
@@ -129,7 +139,7 @@ export default function CoachList() {
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= data.totalPages}
           >
-            Next
+            {t("coachPublic.list.next")}
           </Button>
         </div>
       )}

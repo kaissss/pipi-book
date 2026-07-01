@@ -14,14 +14,15 @@ import BookingConfirmation from "@/components/booking/BookingConfirmation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 import type { Service, AvailabilitySlot, PaymentMethod } from "@/types";
 
 type Step = 1 | 2 | 3;
 
 const STEPS = [
-  { id: 1, label: "Service" },
-  { id: 2, label: "Schedule" },
-  { id: 3, label: "Confirm" },
+  { id: 1, labelKey: "booking.flow.steps.service" },
+  { id: 2, labelKey: "booking.flow.steps.schedule" },
+  { id: 3, labelKey: "booking.flow.steps.confirm" },
 ];
 
 interface Props {
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export default function BookingFlow({ coachId }: Props) {
+  const { t } = useTranslation();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { data: coach, isLoading } = useCoach(coachId);
@@ -45,9 +47,9 @@ export default function BookingFlow({ coachId }: Props) {
   if (!isAuthenticated) {
     return (
       <div className="text-center py-16">
-        <p className="text-muted-foreground mb-4">Please sign in to book a session.</p>
+        <p className="text-muted-foreground mb-4">{t("booking.flow.signInPrompt")}</p>
         <Button asChild>
-          <Link href={`/auth/login?redirect=/coaches/${coachId}/book`}>Login with LINE</Link>
+          <Link href={`/auth/login?redirect=/coaches/${coachId}/book`}>{t("booking.flow.loginWithLine")}</Link>
         </Button>
       </div>
     );
@@ -66,9 +68,9 @@ export default function BookingFlow({ coachId }: Props) {
   if (!coach) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Coach not found.</p>
+        <p className="text-muted-foreground">{t("booking.flow.coachNotFound")}</p>
         <Button asChild variant="outline" className="mt-4">
-          <Link href="/coaches">Browse coaches</Link>
+          <Link href="/coaches">{t("booking.flow.browseCoaches")}</Link>
         </Button>
       </div>
     );
@@ -104,11 +106,11 @@ export default function BookingFlow({ coachId }: Props) {
         <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
           <Link href={`/coaches/${coachId}`}>
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to profile
+            {t("booking.flow.backToProfile")}
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold">Book a Session</h1>
-        <p className="text-muted-foreground text-sm">with {coach.user.displayName}</p>
+        <h1 className="text-2xl font-bold">{t("booking.flow.title")}</h1>
+        <p className="text-muted-foreground text-sm">{t("booking.flow.withCoach", { name: coach.user.displayName })}</p>
       </div>
 
       {/* Steps indicator */}
@@ -129,7 +131,7 @@ export default function BookingFlow({ coachId }: Props) {
               "text-sm",
               step === s.id ? "font-medium" : "text-muted-foreground"
             )}>
-              {s.label}
+              {t(s.labelKey)}
             </span>
             {idx < STEPS.length - 1 && (
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -141,7 +143,7 @@ export default function BookingFlow({ coachId }: Props) {
       {/* Step content */}
       {step === 1 && (
         <div className="space-y-4">
-          <h2 className="font-semibold">Select a Service</h2>
+          <h2 className="font-semibold">{t("booking.flow.selectService")}</h2>
           <ServiceSelector
             services={coach.services}
             selectedServiceId={selectedService?.id ?? null}
@@ -152,7 +154,7 @@ export default function BookingFlow({ coachId }: Props) {
             disabled={!selectedService}
             onClick={() => setStep(2)}
           >
-            Continue to Schedule
+            {t("booking.flow.continueToSchedule")}
           </Button>
         </div>
       )}
@@ -160,9 +162,9 @@ export default function BookingFlow({ coachId }: Props) {
       {step === 2 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Pick a Time Slot</h2>
+            <h2 className="font-semibold">{t("booking.flow.pickTimeSlot")}</h2>
             <Button variant="ghost" size="sm" onClick={() => setStep(1)}>
-              Change service
+              {t("booking.flow.changeService")}
             </Button>
           </div>
           <BookingCalendar
@@ -176,7 +178,7 @@ export default function BookingFlow({ coachId }: Props) {
             disabled={!selectedSlot}
             onClick={() => setStep(3)}
           >
-            Continue to Confirmation
+            {t("booking.flow.continueToConfirmation")}
           </Button>
         </div>
       )}
@@ -184,9 +186,9 @@ export default function BookingFlow({ coachId }: Props) {
       {step === 3 && selectedService && selectedSlot && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Confirm & Pay</h2>
+            <h2 className="font-semibold">{t("booking.flow.confirmAndPay")}</h2>
             <Button variant="ghost" size="sm" onClick={() => setStep(2)}>
-              Change slot
+              {t("booking.flow.changeSlot")}
             </Button>
           </div>
           <BookingConfirmation
@@ -202,7 +204,7 @@ export default function BookingFlow({ coachId }: Props) {
           />
           {(createBooking.error || initPayment.error) && (
             <p className="text-sm text-destructive text-center">
-              Something went wrong. Please try again.
+              {t("booking.flow.somethingWentWrong")}
             </p>
           )}
         </div>

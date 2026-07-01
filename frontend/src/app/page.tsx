@@ -1,36 +1,18 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowRight, BookOpen, Star, Shield, Zap, Users, CalendarCheck } from "lucide-react";
+import { ArrowRight, Star, Shield, Zap, Users, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { APP_NAME } from "@/lib/constants";
+import { useTranslation } from "@/i18n";
 
-const FEATURES = [
-  {
-    icon: CalendarCheck,
-    title: "Easy Scheduling",
-    description: "Browse real-time availability and book sessions with a few taps.",
-  },
-  {
-    icon: Shield,
-    title: "Secure Payments",
-    description: "Pay with confidence via ECPay or LINE Pay — fully encrypted.",
-  },
-  {
-    icon: Users,
-    title: "Verified Coaches",
-    description: "All coaches are reviewed and approved before going live.",
-  },
-  {
-    icon: Zap,
-    title: "LINE Integration",
-    description: "Login with LINE and receive booking reminders right in chat.",
-  },
-];
-
-const SPECIALTIES = [
+// English specialty values double as the /coaches?specialty= filter value; the
+// visible label is localized via home.specialties.labels.
+const SPECIALTY_VALUES = [
   "Life Coaching",
   "Business",
   "Career",
@@ -39,9 +21,34 @@ const SPECIALTIES = [
   "Mindfulness",
   "Leadership",
   "Financial",
-];
+] as const;
 
 export default function HomePage() {
+  const { t } = useTranslation();
+
+  const features = [
+    {
+      icon: CalendarCheck,
+      title: t("home.features.schedulingTitle"),
+      description: t("home.features.schedulingDesc"),
+    },
+    {
+      icon: Shield,
+      title: t("home.features.paymentsTitle"),
+      description: t("home.features.paymentsDesc"),
+    },
+    {
+      icon: Users,
+      title: t("home.features.verifiedTitle"),
+      description: t("home.features.verifiedDesc"),
+    },
+    {
+      icon: Zap,
+      title: t("home.features.lineTitle"),
+      description: t("home.features.lineDesc"),
+    },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -51,24 +58,24 @@ export default function HomePage() {
         <div className="container">
           <div className="max-w-2xl mx-auto text-center animate-fade-in">
             <Badge variant="secondary" className="mb-4">
-              Powered by LINE Login
+              {t("home.hero.badge")}
             </Badge>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-              Find Your Perfect
-              <span className="text-primary"> Coach</span>
+              {t("home.hero.titleLead")}
+              <span className="text-primary"> {t("home.hero.titleHighlight")}</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg mx-auto">
-              Connect with certified professional coaches, book sessions instantly, and achieve your goals — all through LINE.
+              {t("home.hero.subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button asChild size="lg" className="text-base">
                 <Link href="/coaches">
-                  Browse Coaches
+                  {t("home.hero.browse")}
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="text-base">
-                <Link href="/member/become-coach">Start as Coach</Link>
+                <Link href="/member/become-coach">{t("home.hero.startAsCoach")}</Link>
               </Button>
             </div>
 
@@ -76,15 +83,15 @@ export default function HomePage() {
             <div className="flex flex-wrap justify-center gap-6 mt-12 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                4.9 avg rating
+                {t("home.hero.ratingStat")}
               </span>
               <span className="flex items-center gap-1.5">
                 <Users className="h-4 w-4 text-primary" />
-                500+ sessions booked
+                {t("home.hero.sessionsStat")}
               </span>
               <span className="flex items-center gap-1.5">
                 <Shield className="h-4 w-4 text-primary" />
-                Verified coaches
+                {t("home.hero.verifiedStat")}
               </span>
             </div>
           </div>
@@ -95,16 +102,16 @@ export default function HomePage() {
       <section className="py-12 border-y bg-muted/30">
         <div className="container">
           <p className="text-center text-sm font-medium text-muted-foreground mb-4">
-            Popular coaching areas
+            {t("home.specialties.heading")}
           </p>
           <div className="flex flex-wrap justify-center gap-2">
-            {SPECIALTIES.map((s) => (
-              <Link key={s} href={`/coaches?specialty=${encodeURIComponent(s)}`}>
+            {SPECIALTY_VALUES.map((value) => (
+              <Link key={value} href={`/coaches?specialty=${encodeURIComponent(value)}`}>
                 <Badge
                   variant="outline"
                   className="text-sm py-1.5 px-3 cursor-pointer hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
                 >
-                  {s}
+                  {t(`home.specialties.labels.${value}`)}
                 </Badge>
               </Link>
             ))}
@@ -116,22 +123,22 @@ export default function HomePage() {
       <section className="py-16 md:py-24" id="how-it-works">
         <div className="container">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-3">How {APP_NAME} Works</h2>
+            <h2 className="text-3xl font-bold mb-3">{t("home.features.heading", { app: APP_NAME })}</h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              From browsing to booking in minutes.
+              {t("home.features.subtitle")}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {FEATURES.map((f) => {
-              const Icon = f.icon;
+            {features.map((feature) => {
+              const Icon = feature.icon;
               return (
-                <Card key={f.title} className="text-center hover:shadow-md transition-shadow">
+                <Card key={feature.title} className="text-center hover:shadow-md transition-shadow">
                   <CardContent className="pt-6">
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                       <Icon className="h-6 w-6 text-primary" />
                     </div>
-                    <h3 className="font-semibold mb-2">{f.title}</h3>
-                    <p className="text-sm text-muted-foreground">{f.description}</p>
+                    <h3 className="font-semibold mb-2">{feature.title}</h3>
+                    <p className="text-sm text-muted-foreground">{feature.description}</p>
                   </CardContent>
                 </Card>
               );
@@ -144,13 +151,13 @@ export default function HomePage() {
       <section className="py-16 bg-primary text-primary-foreground">
         <div className="container text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">
-            Ready to start your journey?
+            {t("home.cta.heading")}
           </h2>
           <p className="text-primary-foreground/80 mb-8 max-w-sm mx-auto">
-            Login with LINE and find a coach who gets you.
+            {t("home.cta.subtitle")}
           </p>
           <Button asChild size="lg" variant="secondary">
-            <Link href="/auth/login">Get Started Free</Link>
+            <Link href="/auth/login">{t("home.cta.button")}</Link>
           </Button>
         </div>
       </section>

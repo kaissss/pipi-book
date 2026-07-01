@@ -19,7 +19,20 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMyCoachProfile, useCoachServices_Manage } from "@/hooks/useCoach";
 import { formatCurrency, formatDuration } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 import type { Service } from "@/types";
+
+// Map a stored service type to the capitalized suffix of its coachPortal
+// translation key (e.g. "ONE_ON_ONE" -> "OneOnOne" -> coachPortal.services.typeOneOnOne).
+const SERVICE_TYPE_KEY: Record<Service["type"], string> = {
+  ONE_ON_ONE: "OneOnOne",
+  GROUP: "Group",
+  WORKSHOP: "Workshop",
+};
+
+function serviceTypeKey(type: Service["type"]): string {
+  return SERVICE_TYPE_KEY[type];
+}
 
 const DEFAULT_SERVICE: Omit<Service, "id" | "coachId" | "createdAt" | "updatedAt"> = {
   name: "",
@@ -33,6 +46,7 @@ const DEFAULT_SERVICE: Omit<Service, "id" | "coachId" | "createdAt" | "updatedAt
 };
 
 export default function CoachServicesPage() {
+  const { t } = useTranslation();
   const { data: coach, isLoading } = useMyCoachProfile();
   const { createService, updateService, deleteService } = useCoachServices_Manage();
 
@@ -67,12 +81,12 @@ export default function CoachServicesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Services</h1>
-          <p className="text-muted-foreground mt-1">Manage your coaching offerings.</p>
+          <h1 className="text-2xl font-bold">{t("coachPortal.services.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("coachPortal.services.subtitle")}</p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Service
+          {t("coachPortal.services.addService")}
         </Button>
       </div>
 
@@ -85,10 +99,10 @@ export default function CoachServicesPage() {
       {coach?.services.length === 0 && !isLoading && (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground mb-4">No services yet. Create your first offering.</p>
+            <p className="text-muted-foreground mb-4">{t("coachPortal.services.emptyMessage")}</p>
             <Button onClick={openCreate}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Service
+              {t("coachPortal.services.createService")}
             </Button>
           </CardContent>
         </Card>
@@ -104,10 +118,12 @@ export default function CoachServicesPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-medium">{service.name}</h3>
                       <Badge variant={service.isActive ? "default" : "secondary"} className="text-xs">
-                        {service.isActive ? "Active" : "Inactive"}
+                        {service.isActive
+                          ? t("coachPortal.services.statusActive")
+                          : t("coachPortal.services.statusInactive")}
                       </Badge>
                       <Badge variant="outline" className="text-xs capitalize">
-                        {service.type.replace("_", " ").toLowerCase()}
+                        {t(`coachPortal.services.type${serviceTypeKey(service.type)}`)}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
@@ -148,30 +164,34 @@ export default function CoachServicesPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Service" : "New Service"}</DialogTitle>
+            <DialogTitle>
+              {editing
+                ? t("coachPortal.services.editServiceTitle")
+                : t("coachPortal.services.newServiceTitle")}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Service Name</Label>
+              <Label>{t("coachPortal.services.serviceName")}</Label>
               <Input
                 required
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="e.g., Career Strategy Session"
+                placeholder={t("coachPortal.services.serviceNamePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>{t("coachPortal.services.description")}</Label>
               <Textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="What will the client get from this session?"
+                placeholder={t("coachPortal.services.descriptionPlaceholder")}
                 rows={3}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Type</Label>
+                <Label>{t("coachPortal.services.type")}</Label>
                 <Select
                   value={form.type}
                   onValueChange={(v) => setForm({ ...form, type: v as Service["type"] })}
@@ -180,14 +200,14 @@ export default function CoachServicesPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ONE_ON_ONE">1-on-1</SelectItem>
-                    <SelectItem value="GROUP">Group</SelectItem>
-                    <SelectItem value="WORKSHOP">Workshop</SelectItem>
+                    <SelectItem value="ONE_ON_ONE">{t("coachPortal.services.typeOneOnOne")}</SelectItem>
+                    <SelectItem value="GROUP">{t("coachPortal.services.typeGroup")}</SelectItem>
+                    <SelectItem value="WORKSHOP">{t("coachPortal.services.typeWorkshop")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Duration (min)</Label>
+                <Label>{t("coachPortal.services.durationLabel")}</Label>
                 <Input
                   type="number"
                   min={15}
@@ -199,7 +219,7 @@ export default function CoachServicesPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Price (TWD)</Label>
+                <Label>{t("coachPortal.services.priceLabel")}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -208,7 +228,7 @@ export default function CoachServicesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Max Participants</Label>
+                <Label>{t("coachPortal.services.maxParticipants")}</Label>
                 <Input
                   type="number"
                   min={1}
@@ -219,10 +239,12 @@ export default function CoachServicesPage() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancel
+                {t("common.actions.cancel")}
               </Button>
               <Button type="submit" disabled={createService.isPending || updateService.isPending}>
-                {editing ? "Save Changes" : "Create Service"}
+                {editing
+                  ? t("coachPortal.services.saveChanges")
+                  : t("coachPortal.services.createService")}
               </Button>
             </DialogFooter>
           </form>

@@ -5,8 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import BookingCard from "@/components/booking/BookingCard";
 import { usePiPiBookings, useConfirmBooking, useCancelBooking } from "@/hooks/useBooking";
+import { useTranslation } from "@/i18n";
 
 export default function PiPiBookingsPage() {
+  const { t } = useTranslation();
   const [pendingPage, setPendingPage] = useState(1);
   const [upcomingPage, setUpcomingPage] = useState(1);
   const [pastPage, setPastPage] = useState(1);
@@ -35,7 +37,7 @@ export default function PiPiBookingsPage() {
       );
     }
     if (!data || data.data.length === 0) {
-      return <p className="text-center py-8 text-muted-foreground text-sm">No bookings here.</p>;
+      return <p className="text-center py-8 text-muted-foreground text-sm">{t("coachPortal.bookings.empty")}</p>;
     }
     return (
       <div className="space-y-3">
@@ -55,17 +57,19 @@ export default function PiPiBookingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Bookings</h1>
-        <p className="text-muted-foreground mt-1">Manage your client sessions.</p>
+        <h1 className="text-2xl font-bold">{t("coachPortal.bookings.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("coachPortal.bookings.subtitle")}</p>
       </div>
 
       <Tabs defaultValue="pending">
         <TabsList>
           <TabsTrigger value="pending">
-            Pending {pending?.total ? `(${pending.total})` : ""}
+            {pending?.total
+              ? t("coachPortal.bookings.tabPending", { count: `(${pending.total})` })
+              : t("coachPortal.bookings.tabPendingNoCount")}
           </TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-          <TabsTrigger value="past">Past</TabsTrigger>
+          <TabsTrigger value="upcoming">{t("coachPortal.bookings.tabUpcoming")}</TabsTrigger>
+          <TabsTrigger value="past">{t("coachPortal.bookings.tabPast")}</TabsTrigger>
         </TabsList>
         <TabsContent value="pending" className="mt-4">
           <BookingList data={pending} isLoading={loadingPending} showConfirm />

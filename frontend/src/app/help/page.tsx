@@ -1,88 +1,58 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { APP_NAME } from "@/lib/constants";
-
-export const metadata: Metadata = {
-  title: `Help Center — ${APP_NAME}`,
-};
-
-const FAQS: { category: string; items: { q: string; a: string }[] }[] = [
-  {
-    category: "Getting started",
-    items: [
-      {
-        q: "How do I sign in?",
-        a: "Tap “Login with LINE”. We use LINE Login, so there’s no separate password to remember — just authorize once and you’re in.",
-      },
-      {
-        q: "Is it free to join?",
-        a: "Creating an account is free. You only pay when you book a session with a coach.",
-      },
-    ],
-  },
-  {
-    category: "Booking a session",
-    items: [
-      {
-        q: "How do I book a coach?",
-        a: "Open “Find Coaches”, choose a coach, pick a service and an available time slot, then pay to confirm. Your booking is confirmed once payment is verified.",
-      },
-      {
-        q: "How do I pay?",
-        a: "Payments are handled securely by ECPay. We never store your card details. A booking stays pending until payment succeeds.",
-      },
-      {
-        q: "Can I cancel or reschedule?",
-        a: "You can cancel pending or confirmed bookings from “My Bookings”. Refund eligibility depends on the coach’s cancellation policy and applicable law.",
-      },
-      {
-        q: "Will I get reminders?",
-        a: "Yes — booking confirmations and reminders are sent to you through LINE.",
-      },
-    ],
-  },
-  {
-    category: "Becoming a coach",
-    items: [
-      {
-        q: "How do I become a coach?",
-        a: "From the account menu choose “Become a Coach” and fill in your profile. You’ll get access to the Coach Portal right away to set up services and availability.",
-      },
-      {
-        q: "When can clients book me?",
-        a: "Your profile becomes publicly listable and bookable once an admin reviews and approves it. You can prepare your services and schedule while approval is pending.",
-      },
-    ],
-  },
-  {
-    category: "Account",
-    items: [
-      {
-        q: "How do I switch between coach and member views?",
-        a: "If you’re both a coach and a member, use the “Switch to…” option in the account menu to move between portals.",
-      },
-      {
-        q: "How do I update my profile?",
-        a: "Open “Profile” from the account menu to edit your details.",
-      },
-    ],
-  },
-];
+import { useTranslation } from "@/i18n";
 
 export default function HelpPage() {
+  const { t } = useTranslation();
+
+  const faqGroups: { category: string; items: { q: string; a: string }[] }[] = [
+    {
+      category: t("legal.help.cat1"),
+      items: [
+        { q: t("legal.help.q1"), a: t("legal.help.a1") },
+        { q: t("legal.help.q2"), a: t("legal.help.a2") },
+      ],
+    },
+    {
+      category: t("legal.help.cat2"),
+      items: [
+        { q: t("legal.help.q3"), a: t("legal.help.a3") },
+        { q: t("legal.help.q4"), a: t("legal.help.a4") },
+        { q: t("legal.help.q5"), a: t("legal.help.a5") },
+        { q: t("legal.help.q6"), a: t("legal.help.a6") },
+      ],
+    },
+    {
+      category: t("legal.help.cat3"),
+      items: [
+        { q: t("legal.help.q7"), a: t("legal.help.a7") },
+        { q: t("legal.help.q8"), a: t("legal.help.a8") },
+      ],
+    },
+    {
+      category: t("legal.help.cat4"),
+      items: [
+        { q: t("legal.help.q9"), a: t("legal.help.a9") },
+        { q: t("legal.help.q10"), a: t("legal.help.a10") },
+      ],
+    },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="container max-w-3xl py-12 md:py-16">
-        <h1 className="text-3xl font-bold mb-2">Help Center</h1>
+        <h1 className="text-3xl font-bold mb-2">{t("legal.help.title")}</h1>
         <p className="text-sm text-muted-foreground mb-10">
-          Answers to common questions about using {APP_NAME}.
+          {t("legal.help.subtitle", { app: APP_NAME })}
         </p>
 
         <div className="space-y-10">
-          {FAQS.map((group) => (
+          {faqGroups.map((group) => (
             <section key={group.category} className="space-y-4">
               <h2 className="text-lg font-semibold">{group.category}</h2>
               <dl className="space-y-4">
@@ -98,15 +68,15 @@ export default function HelpPage() {
         </div>
 
         <div className="mt-12 rounded-lg bg-muted/50 p-6 text-center">
-          <p className="font-medium">Still need help?</p>
+          <p className="font-medium">{t("legal.help.stillNeedHelpTitle")}</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Reach us through your LINE Official Account, or review our{" "}
+            {t("legal.help.stillNeedHelpLead")}{" "}
             <Link href="/terms" className="underline underline-offset-2 hover:text-foreground">
-              Terms
+              {t("legal.help.termsLink")}
             </Link>{" "}
-            and{" "}
+            {t("legal.help.and")}{" "}
             <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
-              Privacy Policy
+              {t("legal.help.privacyLink")}
             </Link>
             .
           </p>

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Star, MapPin, Clock } from "lucide-react";
@@ -6,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials, formatCurrency, truncate } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 import type { Coach } from "@/types";
 
 interface CoachCardProps {
@@ -13,6 +16,7 @@ interface CoachCardProps {
 }
 
 export default function CoachCard({ coach }: CoachCardProps) {
+  const { t } = useTranslation();
   const minPrice = coach.services.length > 0
     ? Math.min(...coach.services.map((s) => s.price))
     : null;
@@ -41,7 +45,9 @@ export default function CoachCard({ coach }: CoachCardProps) {
             <div className="flex items-center gap-1 shrink-0">
               <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
               <span className="text-sm font-medium">{coach.rating.toFixed(1)}</span>
-              <span className="text-xs text-muted-foreground">({coach.reviewCount})</span>
+              <span className="text-xs text-muted-foreground">
+                {t("coachPublic.card.reviewCount", { count: coach.reviewCount })}
+              </span>
             </div>
           </div>
 
@@ -49,7 +55,7 @@ export default function CoachCard({ coach }: CoachCardProps) {
           <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              {coach.experience}yr exp
+              {t("coachPublic.card.experience", { years: coach.experience })}
             </span>
             {coach.location && (
               <span className="flex items-center gap-1">
@@ -68,7 +74,7 @@ export default function CoachCard({ coach }: CoachCardProps) {
           <div className="flex flex-wrap gap-1 mb-4">
             {coach.specialties.slice(0, 3).map((spec) => (
               <Badge key={spec} variant="secondary" className="text-xs">
-                {spec}
+                {t(`taxonomy.specialty.${spec}`)}
               </Badge>
             ))}
             {coach.specialties.length > 3 && (
@@ -82,16 +88,16 @@ export default function CoachCard({ coach }: CoachCardProps) {
           <div className="flex items-center justify-between">
             {minPrice !== null ? (
               <div>
-                <span className="text-xs text-muted-foreground">From </span>
+                <span className="text-xs text-muted-foreground">{t("coachPublic.card.from")} </span>
                 <span className="font-semibold text-sm">
                   {formatCurrency(minPrice)}
                 </span>
               </div>
             ) : (
-              <span className="text-xs text-muted-foreground">No services yet</span>
+              <span className="text-xs text-muted-foreground">{t("coachPublic.card.noServices")}</span>
             )}
             <Button asChild size="sm">
-              <Link href={`/coaches/${coach.id}`}>View Profile</Link>
+              <Link href={`/coaches/${coach.id}`}>{t("coachPublic.card.viewProfile")}</Link>
             </Button>
           </div>
         </div>

@@ -1,101 +1,66 @@
-import type { Metadata } from "next";
+"use client";
+
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { APP_NAME } from "@/lib/constants";
-
-export const metadata: Metadata = {
-  title: `Terms of Service — ${APP_NAME}`,
-};
-
-const LAST_UPDATED = "June 2026";
+import { useTranslation } from "@/i18n";
 
 export default function TermsPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="container max-w-3xl py-12 md:py-16">
-        <h1 className="text-3xl font-bold mb-2">Terms of Service</h1>
-        <p className="text-sm text-muted-foreground mb-8">Last updated: {LAST_UPDATED}</p>
+        <h1 className="text-3xl font-bold mb-2">{t("legal.terms.title")}</h1>
+        <p className="text-sm text-muted-foreground mb-8">
+          {t("legal.terms.lastUpdated", { date: t("legal.terms.date") })}
+        </p>
 
         <div className="space-y-8 text-sm leading-relaxed text-muted-foreground">
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold text-foreground">1. Acceptance of Terms</h2>
-            <p>
-              By accessing or using {APP_NAME} (the &ldquo;Platform&rdquo;), you agree to be bound by
-              these Terms of Service. If you do not agree, please do not use the Platform.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("legal.terms.s1Title")}</h2>
+            <p>{t("legal.terms.s1Body", { app: APP_NAME })}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold text-foreground">2. The Service</h2>
-            <p>
-              {APP_NAME} connects students with independent coaches and lets them browse
-              availability, book sessions, and pay online. {APP_NAME} provides the booking and
-              payment tools; coaches are independent providers responsible for the services they
-              deliver. {APP_NAME} is not a party to the agreement between a student and a coach.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("legal.terms.s2Title")}</h2>
+            <p>{t("legal.terms.s2Body", { app: APP_NAME })}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold text-foreground">3. Accounts</h2>
-            <p>
-              You sign in using LINE Login. You are responsible for activity under your account and
-              for keeping your LINE credentials secure. You must provide accurate information and be
-              legally able to enter into contracts.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("legal.terms.s3Title")}</h2>
+            <p>{t("legal.terms.s3Body", { app: APP_NAME })}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold text-foreground">4. Bookings &amp; Payments</h2>
-            <p>
-              Payments are processed by our third-party provider (ECPay). A booking is confirmed only
-              after payment is verified. Prices are set by individual coaches. Refunds and
-              cancellations are subject to the coach&rsquo;s policy and applicable law; contact the
-              coach or our support team for assistance.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("legal.terms.s4Title")}</h2>
+            <p>{t("legal.terms.s4Body", { app: APP_NAME })}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold text-foreground">5. Coach Responsibilities</h2>
-            <p>
-              Coaches are responsible for the accuracy of their profile, the lawfulness of their
-              services, honoring confirmed bookings, and complying with tax and professional
-              obligations. {APP_NAME} may review, suspend, or remove coach accounts that violate
-              these Terms.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("legal.terms.s5Title")}</h2>
+            <p>{t("legal.terms.s5Body", { app: APP_NAME })}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold text-foreground">6. Acceptable Use</h2>
-            <p>
-              You agree not to misuse the Platform, including attempting to disrupt it, circumvent
-              payments, harass other users, or use it for unlawful purposes.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("legal.terms.s6Title")}</h2>
+            <p>{t("legal.terms.s6Body", { app: APP_NAME })}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold text-foreground">7. Disclaimers &amp; Liability</h2>
-            <p>
-              The Platform is provided &ldquo;as is&rdquo; without warranties of any kind. To the
-              maximum extent permitted by law, {APP_NAME} is not liable for the conduct of coaches or
-              students, or for indirect or consequential damages arising from use of the Platform.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("legal.terms.s7Title")}</h2>
+            <p>{t("legal.terms.s7Body", { app: APP_NAME })}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold text-foreground">8. Changes</h2>
-            <p>
-              We may update these Terms from time to time. Continued use after changes take effect
-              constitutes acceptance of the revised Terms.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("legal.terms.s8Title")}</h2>
+            <p>{t("legal.terms.s8Body", { app: APP_NAME })}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold text-foreground">9. Contact</h2>
-            <p>
-              Questions about these Terms? Reach us through the Help Center or your LINE Official
-              Account.
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t("legal.terms.s9Title")}</h2>
+            <p>{t("legal.terms.s9Body", { app: APP_NAME })}</p>
           </section>
         </div>
       </main>

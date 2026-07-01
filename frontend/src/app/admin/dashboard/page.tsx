@@ -6,15 +6,17 @@ import StatsCard from "@/components/admin/StatsCard";
 import RecentBookings from "@/components/admin/RecentBookings";
 import { useAdminStats } from "@/hooks/useAdmin";
 import { formatCurrency } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 
 export default function AdminDashboardPage() {
+  const { t } = useTranslation();
   const { data: stats, isLoading } = useAdminStats();
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Platform Overview</h1>
-        <p className="text-muted-foreground mt-1">Real-time stats across PiPiBook.</p>
+        <h1 className="text-2xl font-bold">{t("admin.dashboard.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("admin.dashboard.subtitle")}</p>
       </div>
 
       {/* Stats grid */}
@@ -27,37 +29,37 @@ export default function AdminDashboardPage() {
       ) : stats ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
-            title="Total Users"
+            title={t("admin.dashboard.totalUsers")}
             value={stats.totalUsers.toLocaleString()}
             icon={Users}
-            description={`${stats.activeUsers} active`}
+            description={t("admin.dashboard.activeUsers", { n: stats.activeUsers })}
           />
           <StatsCard
-            title="Approved Coaches"
+            title={t("admin.dashboard.approvedCoaches")}
             value={stats.totalCoaches.toLocaleString()}
             icon={UserCheck}
-            description={`${stats.pendingCoachApprovals} pending approval`}
+            description={t("admin.dashboard.pendingApproval", { n: stats.pendingCoachApprovals })}
           />
           <StatsCard
-            title="Total Bookings"
+            title={t("admin.dashboard.totalBookings")}
             value={stats.totalBookings.toLocaleString()}
             icon={CalendarDays}
-            description={`${stats.bookingsThisMonth} this month`}
+            description={t("admin.dashboard.bookingsThisMonth", { n: stats.bookingsThisMonth })}
           />
           <StatsCard
-            title="Total Revenue"
+            title={t("admin.dashboard.totalRevenue")}
             value={formatCurrency(stats.totalRevenue)}
             icon={DollarSign}
-            description={`${formatCurrency(stats.revenueThisMonth)} this month`}
+            description={t("admin.dashboard.revenueThisMonth", { amount: formatCurrency(stats.revenueThisMonth) })}
           />
           <StatsCard
-            title="Pending Approvals"
+            title={t("admin.dashboard.pendingApprovals")}
             value={stats.pendingCoachApprovals}
             icon={Clock}
             className="col-span-2"
           />
           <StatsCard
-            title="Monthly Bookings"
+            title={t("admin.dashboard.monthlyBookings")}
             value={stats.bookingsThisMonth}
             icon={TrendingUp}
             className="col-span-2"

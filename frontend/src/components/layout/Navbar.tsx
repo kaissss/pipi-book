@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { APP_NAME, STORAGE_KEYS } from "@/lib/constants";
+import { useTranslation } from "@/i18n";
+import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,11 +32,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import type { UserRole } from "@/types";
 
-// What each role looks like in the nav, and where its dashboard/profile live.
-const ROLE_META: Record<UserRole, { label: string; dashboard: string; profile: string; icon: LucideIcon }> = {
-  ADMIN: { label: "Admin", dashboard: "/admin/dashboard", profile: "/member/profile", icon: Shield },
-  COACH: { label: "Coach", dashboard: "/coach/dashboard", profile: "/coach/profile", icon: Briefcase },
-  STUDENT: { label: "Member", dashboard: "/member/dashboard", profile: "/member/profile", icon: CalendarDays },
+// Where each role's dashboard/profile live, and its nav icon. The display label
+// is translated at render time via t(`common.roles.${role}`).
+const ROLE_META: Record<UserRole, { dashboard: string; profile: string; icon: LucideIcon }> = {
+  ADMIN: { dashboard: "/admin/dashboard", profile: "/member/profile", icon: Shield },
+  COACH: { dashboard: "/coach/dashboard", profile: "/coach/profile", icon: Briefcase },
+  STUDENT: { dashboard: "/member/dashboard", profile: "/member/profile", icon: CalendarDays },
 };
 
 // The roles a person may act as. An admin can view every portal; a coach is
@@ -47,8 +50,12 @@ function availableRoles(role: UserRole): UserRole[] {
 
 export default function Navbar() {
   const { user, isAuthenticated, logout, isStudent } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Translated label for a role, e.g. "Coach" / "教練".
+  const roleLabel = (role: UserRole) => t(`common.roles.${role}`);
 
   // The role the user is currently acting as. Defaults to their assigned role
   // and is remembered across navigations. Never exceeds their real privileges
@@ -85,17 +92,18 @@ export default function Navbar() {
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-6">
           <Link href="/coaches" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Find Coaches
+            {t("common.nav.findCoaches")}
           </Link>
           {isAuthenticated && (
             <Link href={meta.dashboard} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Dashboard
+              {t("common.nav.dashboard")}
             </Link>
           )}
         </nav>
 
         {/* Desktop auth */}
         <div className="hidden md:flex items-center gap-3">
+          <LanguageSwitcher />
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -110,20 +118,22 @@ export default function Navbar() {
                 <div className="flex items-center gap-2 p-2">
                   <div className="flex flex-col space-y-0.5">
                     <p className="text-sm font-medium">{user.displayName}</p>
-                    <p className="text-xs text-muted-foreground">Viewing as {meta.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("common.nav.viewingAs", { role: roleLabel(effectiveRole) })}
+                    </p>
                   </div>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href={meta.dashboard} className="flex items-center gap-2">
                     <meta.icon className="h-4 w-4" />
-                    Dashboard
+                    {t("common.nav.dashboard")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href={meta.profile} className="flex items-center gap-2">
                     <User className="h-4 w-4" />
-                    Profile
+                    {t("common.nav.profile")}
                   </Link>
                 </DropdownMenuItem>
 
@@ -132,7 +142,7 @@ export default function Navbar() {
                 {roles.filter((role) => role !== effectiveRole).map((role) => (
                   <DropdownMenuItem key={role} onClick={() => switchRole(role)} className="flex items-center gap-2">
                     <Repeat className="h-4 w-4" />
-                    Switch to {ROLE_META[role].label}
+                    {t("common.nav.switchTo", { role: roleLabel(role) })}
                   </DropdownMenuItem>
                 ))}
 
@@ -140,7 +150,7 @@ export default function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link href="/member/become-coach" className="flex items-center gap-2">
                       <GraduationCap className="h-4 w-4" />
-                      Become a Coach
+                      {t("common.nav.becomeCoach")}
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -150,13 +160,13 @@ export default function Navbar() {
                   className="flex items-center gap-2 text-destructive focus:text-destructive"
                 >
                   <LogOut className="h-4 w-4" />
-                  Sign out
+                  {t("common.nav.signOut")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <Button asChild className="bg-line hover:bg-line-dark text-white">
-              <Link href="/auth/login">Login with LINE</Link>
+              <Link href="/auth/login">{t("common.nav.login")}</Link>
             </Button>
           )}
         </div>
@@ -165,7 +175,7 @@ export default function Navbar() {
         <button
           className="md:hidden p-2 rounded-md"
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle menu"
+          aria-label={t("common.nav.toggleMenu")}
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -179,7 +189,7 @@ export default function Navbar() {
             className="text-sm font-medium"
             onClick={() => setMobileOpen(false)}
           >
-            Find Coaches
+            {t("common.nav.findCoaches")}
           </Link>
           {isAuthenticated ? (
             <>
@@ -188,14 +198,14 @@ export default function Navbar() {
                 className="text-sm font-medium"
                 onClick={() => setMobileOpen(false)}
               >
-                Dashboard
+                {t("common.nav.dashboard")}
               </Link>
               <Link
                 href={meta.profile}
                 className="text-sm font-medium"
                 onClick={() => setMobileOpen(false)}
               >
-                Profile
+                {t("common.nav.profile")}
               </Link>
               {roles.filter((role) => role !== effectiveRole).map((role) => (
                 <button
@@ -203,7 +213,7 @@ export default function Navbar() {
                   onClick={() => switchRole(role)}
                   className="text-sm font-medium text-left"
                 >
-                  Switch to {ROLE_META[role].label}
+                  {t("common.nav.switchTo", { role: roleLabel(role) })}
                 </button>
               ))}
               {isStudent && (
@@ -212,23 +222,27 @@ export default function Navbar() {
                   className="text-sm font-medium"
                   onClick={() => setMobileOpen(false)}
                 >
-                  Become a Coach
+                  {t("common.nav.becomeCoach")}
                 </Link>
               )}
               <button
                 onClick={() => { logout(); setMobileOpen(false); }}
                 className="text-sm font-medium text-destructive text-left"
               >
-                Sign out
+                {t("common.nav.signOut")}
               </button>
             </>
           ) : (
             <Button asChild className="bg-line hover:bg-line-dark text-white w-full">
               <Link href="/auth/login" onClick={() => setMobileOpen(false)}>
-                Login with LINE
+                {t("common.nav.login")}
               </Link>
             </Button>
           )}
+
+          <div className="border-t pt-4">
+            <LanguageSwitcher variant="inline" />
+          </div>
         </div>
       )}
     </header>

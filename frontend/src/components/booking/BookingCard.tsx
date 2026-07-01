@@ -1,4 +1,5 @@
-import Link from "next/link";
+"use client";
+
 import { Calendar, Clock, Video } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +12,7 @@ import {
   getInitials,
   getBookingStatusColor,
 } from "@/lib/utils";
-import { BOOKING_STATUS_LABELS } from "@/lib/constants";
+import { useTranslation } from "@/i18n";
 import type { Booking } from "@/types";
 
 interface BookingCardProps {
@@ -29,8 +30,9 @@ export default function BookingCard({
   onConfirm,
   onPay,
 }: BookingCardProps) {
+  const { t } = useTranslation();
   const other = perspective === "student" ? booking.coach.user : booking.student;
-  const label = perspective === "student" ? "Coach" : "Student";
+  const label = perspective === "student" ? t("booking.card.coach") : t("booking.card.student");
 
   // A card booking left unpaid (e.g. the buyer closed the ECPay page) can be
   // paid again. Cash bookings settle in person, so no pay button.
@@ -60,7 +62,7 @@ export default function BookingCard({
             <div className="flex items-center gap-2 flex-wrap">
               <p className="font-medium text-sm">{booking.service.name}</p>
               <Badge className={getBookingStatusColor(booking.status)}>
-                {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
+                {t(`common.bookingStatus.${booking.status}`)}
               </Badge>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -75,7 +77,7 @@ export default function BookingCard({
             </div>
             {booking.payment && (
               <p className="text-xs text-muted-foreground">
-                {formatCurrency(booking.payment.amount)} &middot; {booking.payment.status}
+                {formatCurrency(booking.payment.amount)} &middot; {t(`common.paymentStatus.${booking.payment.status}`)}
               </p>
             )}
           </div>
@@ -86,18 +88,18 @@ export default function BookingCard({
               <Button asChild size="sm" variant="outline">
                 <a href={booking.meetingUrl} target="_blank" rel="noopener noreferrer">
                   <Video className="h-3 w-3 mr-1" />
-                  Join
+                  {t("booking.card.join")}
                 </a>
               </Button>
             )}
             {onPay && needsPayment && (
               <Button size="sm" onClick={() => onPay(booking.id)}>
-                Pay
+                {t("booking.card.pay")}
               </Button>
             )}
             {onConfirm && booking.status === "PENDING" && (
               <Button size="sm" onClick={() => onConfirm(booking.id)}>
-                Confirm
+                {t("booking.card.confirm")}
               </Button>
             )}
             {onCancel && ["PENDING", "CONFIRMED"].includes(booking.status) && (
@@ -107,7 +109,7 @@ export default function BookingCard({
                 className="text-destructive hover:text-destructive"
                 onClick={() => onCancel(booking.id)}
               >
-                Cancel
+                {t("booking.card.cancel")}
               </Button>
             )}
           </div>

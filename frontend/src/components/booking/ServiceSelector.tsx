@@ -4,6 +4,7 @@ import { Clock, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatCurrency, formatDuration } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 import type { Service } from "@/types";
 
 interface ServiceSelectorProps {
@@ -17,12 +18,13 @@ export default function ServiceSelector({
   selectedServiceId,
   onSelect,
 }: ServiceSelectorProps) {
+  const { t } = useTranslation();
   const activeServices = services.filter((s) => s.isActive);
 
   if (activeServices.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        No services available for booking.
+        {t("booking.service.noneAvailable")}
       </div>
     );
   }
@@ -60,7 +62,7 @@ export default function ServiceSelector({
                   {service.maxParticipants > 1 && (
                     <span className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
-                      Up to {service.maxParticipants} participants
+                      {t("booking.service.upToParticipants", { count: service.maxParticipants })}
                     </span>
                   )}
                 </div>

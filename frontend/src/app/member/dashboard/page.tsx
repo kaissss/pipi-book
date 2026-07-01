@@ -8,8 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import BookingCard from "@/components/booking/BookingCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useMyBookings, useCancelBooking } from "@/hooks/useBooking";
+import { useTranslation } from "@/i18n";
 
 export default function MemberDashboardPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { data: upcoming, isLoading } = useMyBookings({ status: "CONFIRMED", limit: 3 });
   const { data: pending } = useMyBookings({ status: "PENDING", limit: 3 });
@@ -24,9 +26,11 @@ export default function MemberDashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">
-          Welcome back, {user?.displayName?.split(" ")[0] ?? "there"}!
+          {t("member.dashboard.greeting", {
+            name: user?.displayName?.split(" ")[0] ?? t("member.dashboard.fallbackName"),
+          })}
         </h1>
-        <p className="text-muted-foreground mt-1">Here's what's coming up.</p>
+        <p className="text-muted-foreground mt-1">{t("member.dashboard.subtitle")}</p>
       </div>
 
       {/* Stats */}
@@ -38,7 +42,7 @@ export default function MemberDashboardPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{upcomingCount}</p>
-              <p className="text-xs text-muted-foreground">Upcoming sessions</p>
+              <p className="text-xs text-muted-foreground">{t("member.dashboard.upcomingSessions")}</p>
             </div>
           </CardContent>
         </Card>
@@ -49,7 +53,7 @@ export default function MemberDashboardPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{pendingCount}</p>
-              <p className="text-xs text-muted-foreground">Pending payment</p>
+              <p className="text-xs text-muted-foreground">{t("member.dashboard.pendingPayment")}</p>
             </div>
           </CardContent>
         </Card>
@@ -60,7 +64,7 @@ export default function MemberDashboardPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{completedCount}</p>
-              <p className="text-xs text-muted-foreground">Completed</p>
+              <p className="text-xs text-muted-foreground">{t("member.dashboard.completed")}</p>
             </div>
           </CardContent>
         </Card>
@@ -69,9 +73,9 @@ export default function MemberDashboardPage() {
       {/* Upcoming bookings */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-lg">Upcoming Sessions</h2>
+          <h2 className="font-semibold text-lg">{t("member.dashboard.upcomingSectionTitle")}</h2>
           <Button asChild variant="ghost" size="sm">
-            <Link href="/member/bookings">View all</Link>
+            <Link href="/member/bookings">{t("member.dashboard.viewAll")}</Link>
           </Button>
         </div>
 
@@ -85,12 +89,12 @@ export default function MemberDashboardPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <Search className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
-              <p className="font-medium mb-1">No upcoming sessions</p>
+              <p className="font-medium mb-1">{t("member.dashboard.emptyTitle")}</p>
               <p className="text-sm text-muted-foreground mb-4">
-                Browse coaches and book your first session.
+                {t("member.dashboard.emptyDescription")}
               </p>
               <Button asChild>
-                <Link href="/coaches">Find a Coach</Link>
+                <Link href="/coaches">{t("member.dashboard.findACoach")}</Link>
               </Button>
             </CardContent>
           </Card>

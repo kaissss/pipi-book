@@ -19,10 +19,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useAdminCoaches, useApproveCoach, useRejectCoach, useSuspendUser } from "@/hooks/useAdmin";
 import { getInitials, formatDate, getCoachStatusColor } from "@/lib/utils";
-import { COACH_STATUS_LABELS } from "@/lib/constants";
+import { useTranslation } from "@/i18n";
 import type { Coach } from "@/types";
 
 export default function AdminCoachesPage() {
+  const { t } = useTranslation();
   const [rejectTarget, setRejectTarget] = useState<Coach | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
@@ -63,7 +64,7 @@ export default function AdminCoachesPage() {
       );
     }
     if (!coaches || coaches.length === 0) {
-      return <p className="text-center py-8 text-muted-foreground text-sm">No coaches here.</p>;
+      return <p className="text-center py-8 text-muted-foreground text-sm">{t("admin.coaches.empty")}</p>;
     }
     return (
       <div className="space-y-3">
@@ -79,7 +80,7 @@ export default function AdminCoachesPage() {
                   <div className="flex items-center gap-2 mb-0.5">
                     <p className="font-medium text-sm">{coach.user.displayName}</p>
                     <Badge className={getCoachStatusColor(coach.status)}>
-                      {COACH_STATUS_LABELS[coach.status] ?? coach.status}
+                      {t(`common.coachStatus.${coach.status}`)}
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground line-clamp-1 mb-1">{coach.bio}</p>
@@ -89,7 +90,7 @@ export default function AdminCoachesPage() {
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Applied {formatDate(coach.createdAt)}
+                    {t("admin.coaches.applied", { date: formatDate(coach.createdAt) })}
                   </p>
                 </div>
                 <div className="flex gap-2 shrink-0">
@@ -100,7 +101,7 @@ export default function AdminCoachesPage() {
                       disabled={approveCoach.isPending}
                     >
                       <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                      Approve
+                      {t("admin.coaches.approve")}
                     </Button>
                   )}
                   {showApprove && (
@@ -111,7 +112,7 @@ export default function AdminCoachesPage() {
                       onClick={() => setRejectTarget(coach)}
                     >
                       <XCircle className="h-3.5 w-3.5 mr-1" />
-                      Reject
+                      {t("admin.coaches.reject")}
                     </Button>
                   )}
                   {!showApprove && coach.status === "APPROVED" && (
@@ -122,7 +123,7 @@ export default function AdminCoachesPage() {
                       onClick={() => suspendUser.mutate(coach.userId)}
                     >
                       <PauseCircle className="h-3.5 w-3.5 mr-1" />
-                      Suspend
+                      {t("admin.coaches.suspend")}
                     </Button>
                   )}
                 </div>
@@ -137,16 +138,18 @@ export default function AdminCoachesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Coach Management</h1>
-        <p className="text-muted-foreground mt-1">Review and manage coach applications.</p>
+        <h1 className="text-2xl font-bold">{t("admin.coaches.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("admin.coaches.subtitle")}</p>
       </div>
 
       <Tabs defaultValue="pending">
         <TabsList>
           <TabsTrigger value="pending">
-            Pending {pendingCoaches?.total ? `(${pendingCoaches.total})` : ""}
+            {pendingCoaches?.total
+              ? t("admin.coaches.tabPendingCount", { n: pendingCoaches.total })
+              : t("admin.coaches.tabPending")}
           </TabsTrigger>
-          <TabsTrigger value="approved">Approved</TabsTrigger>
+          <TabsTrigger value="approved">{t("admin.coaches.tabApproved")}</TabsTrigger>
         </TabsList>
         <TabsContent value="pending" className="mt-4">
           <CoachTable
@@ -164,30 +167,30 @@ export default function AdminCoachesPage() {
       <Dialog open={!!rejectTarget} onOpenChange={(open) => !open && setRejectTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Coach Application</DialogTitle>
+            <DialogTitle>{t("admin.coaches.rejectDialogTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <p className="text-sm text-muted-foreground">
-              Rejecting {rejectTarget?.user.displayName}. Please provide a reason.
+              {t("admin.coaches.rejectDialogDescription", { name: rejectTarget?.user.displayName ?? "" })}
             </p>
             <div className="space-y-2">
-              <Label>Reason</Label>
+              <Label>{t("admin.coaches.reasonLabel")}</Label>
               <Textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="e.g., Incomplete bio, missing certifications..."
+                placeholder={t("admin.coaches.reasonPlaceholder")}
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectTarget(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setRejectTarget(null)}>{t("common.actions.cancel")}</Button>
             <Button
               variant="destructive"
               onClick={handleReject}
               disabled={!rejectReason || rejectCoach.isPending}
             >
-              Reject Application
+              {t("admin.coaches.rejectApplication")}
             </Button>
           </DialogFooter>
         </DialogContent>

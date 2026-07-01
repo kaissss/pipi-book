@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import { APP_NAME } from "@/lib/constants";
+import { useTranslation } from "@/i18n";
 
 export default function Footer() {
+  const { t } = useTranslation();
   return (
     <footer className="border-t bg-card mt-auto">
       <div className="container py-10 md:py-12">
@@ -14,34 +18,33 @@ export default function Footer() {
               {APP_NAME}
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs">
-              Connect with professional coaches and book sessions directly through LINE.
-              Your growth journey starts here.
+              {t("common.footer.tagline")}
             </p>
           </div>
 
           {/* Links */}
           <div>
-            <h4 className="text-sm font-semibold mb-3">Platform</h4>
+            <h4 className="text-sm font-semibold mb-3">{t("common.footer.platform")}</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/coaches" className="hover:text-foreground transition-colors">Find Coaches</Link></li>
-              <li><Link href="/member/become-coach" className="hover:text-foreground transition-colors">Become a Coach</Link></li>
-              <li><Link href="/#how-it-works" className="hover:text-foreground transition-colors">How it Works</Link></li>
+              <li><Link href="/coaches" className="hover:text-foreground transition-colors">{t("common.nav.findCoaches")}</Link></li>
+              <li><Link href="/member/become-coach" className="hover:text-foreground transition-colors">{t("common.nav.becomeCoach")}</Link></li>
+              <li><Link href="/#how-it-works" className="hover:text-foreground transition-colors">{t("common.footer.howItWorks")}</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold mb-3">Support</h4>
+            <h4 className="text-sm font-semibold mb-3">{t("common.footer.support")}</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/help" className="hover:text-foreground transition-colors">Help Center</Link></li>
-              <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
+              <li><Link href="/help" className="hover:text-foreground transition-colors">{t("common.footer.helpCenter")}</Link></li>
+              <li><Link href="/privacy" className="hover:text-foreground transition-colors">{t("common.footer.privacy")}</Link></li>
+              <li><Link href="/terms" className="hover:text-foreground transition-colors">{t("common.footer.terms")}</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="border-t mt-8 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
-          <p>Powered by LINE Login &amp; ECPay</p>
+          <p>{t("common.footer.rights", { year: new Date().getFullYear(), app: APP_NAME })}</p>
+          <p>{t("common.footer.poweredBy")}</p>
         </div>
       </div>
     </footer>

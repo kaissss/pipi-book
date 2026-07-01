@@ -1,0 +1,166 @@
+// Shared UI strings: navigation, roles, portal sidebars, footer, and generic
+// actions/statuses reused across features. Feature-specific copy lives in its
+// own namespace file. `zhTW` is typed against `en` so both stay in lockstep.
+
+const en = {
+  nav: {
+    findCoaches: "Find Coaches",
+    dashboard: "Dashboard",
+    profile: "Profile",
+    becomeCoach: "Become a Coach",
+    signOut: "Sign out",
+    login: "Login with LINE",
+    viewingAs: "Viewing as {role}",
+    switchTo: "Switch to {role}",
+    toggleMenu: "Toggle menu",
+  },
+  roles: {
+    ADMIN: "Admin",
+    COACH: "Coach",
+    STUDENT: "Member",
+  },
+  portal: {
+    coach: "Coach Portal",
+    member: "Member",
+    admin: "Admin",
+  },
+  portalNav: {
+    dashboard: "Dashboard",
+    schedule: "Schedule",
+    services: "Services",
+    bookings: "Bookings",
+    myBookings: "My Bookings",
+    profile: "Profile",
+    users: "Users",
+    coaches: "Coaches",
+  },
+  footer: {
+    tagline:
+      "Connect with professional coaches and book sessions directly through LINE. Your growth journey starts here.",
+    platform: "Platform",
+    support: "Support",
+    howItWorks: "How it Works",
+    helpCenter: "Help Center",
+    privacy: "Privacy Policy",
+    terms: "Terms of Service",
+    rights: "© {year} {app}. All rights reserved.",
+    poweredBy: "Powered by LINE Login & ECPay",
+  },
+  language: {
+    label: "Language",
+  },
+  actions: {
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    edit: "Edit",
+    continue: "Continue",
+    back: "Back",
+    confirm: "Confirm",
+    retry: "Try again",
+    close: "Close",
+    loading: "Loading...",
+  },
+  bookingStatus: {
+    PENDING: "Pending",
+    CONFIRMED: "Confirmed",
+    CANCELLED: "Cancelled",
+    COMPLETED: "Completed",
+    NO_SHOW: "No Show",
+  },
+  coachStatus: {
+    PENDING: "Pending Review",
+    APPROVED: "Approved",
+    REJECTED: "Rejected",
+    SUSPENDED: "Suspended",
+  },
+  paymentStatus: {
+    PENDING: "Pending",
+    PAID: "Paid",
+    FAILED: "Failed",
+    REFUNDED: "Refunded",
+    CANCELLED: "Cancelled",
+  },
+};
+
+const zhTW: typeof en = {
+  nav: {
+    findCoaches: "尋找教練",
+    dashboard: "儀表板",
+    profile: "個人資料",
+    becomeCoach: "成為教練",
+    signOut: "登出",
+    login: "使用 LINE 登入",
+    viewingAs: "目前身分：{role}",
+    switchTo: "切換為{role}",
+    toggleMenu: "切換選單",
+  },
+  roles: {
+    ADMIN: "管理員",
+    COACH: "教練",
+    STUDENT: "會員",
+  },
+  portal: {
+    coach: "教練後台",
+    member: "會員中心",
+    admin: "管理後台",
+  },
+  portalNav: {
+    dashboard: "儀表板",
+    schedule: "行程管理",
+    services: "服務項目",
+    bookings: "預約管理",
+    myBookings: "我的預約",
+    profile: "個人資料",
+    users: "使用者",
+    coaches: "教練",
+  },
+  footer: {
+    tagline: "透過 LINE 直接與專業教練聯繫並預約課程，你的成長旅程從這裡開始。",
+    platform: "平台",
+    support: "支援",
+    howItWorks: "運作方式",
+    helpCenter: "說明中心",
+    privacy: "隱私權政策",
+    terms: "服務條款",
+    rights: "© {year} {app}．保留所有權利。",
+    poweredBy: "由 LINE 登入與 ECPay 提供技術支援",
+  },
+  language: {
+    label: "語言",
+  },
+  actions: {
+    save: "儲存",
+    cancel: "取消",
+    delete: "刪除",
+    edit: "編輯",
+    continue: "繼續",
+    back: "返回",
+    confirm: "確認",
+    retry: "重試",
+    close: "關閉",
+    loading: "載入中...",
+  },
+  bookingStatus: {
+    PENDING: "待確認",
+    CONFIRMED: "已確認",
+    CANCELLED: "已取消",
+    COMPLETED: "已完成",
+    NO_SHOW: "未出席",
+  },
+  coachStatus: {
+    PENDING: "審核中",
+    APPROVED: "已核准",
+    REJECTED: "已拒絕",
+    SUSPENDED: "已停權",
+  },
+  paymentStatus: {
+    PENDING: "待付款",
+    PAID: "已付款",
+    FAILED: "付款失敗",
+    REFUNDED: "已退款",
+    CANCELLED: "已取消",
+  },
+};
+
+export const common = { en, zhTW };

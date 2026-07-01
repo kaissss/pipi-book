@@ -6,17 +6,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import BookingCard from "@/components/booking/BookingCard";
 import { useMyBookings, useCancelBooking } from "@/hooks/useBooking";
 import { useInitPayment } from "@/hooks/usePayment";
+import { useTranslation } from "@/i18n";
 import type { BookingStatus } from "@/types";
 
-const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: "all", label: "All bookings" },
-  { value: "CONFIRMED", label: "Confirmed" },
-  { value: "PENDING", label: "Pending" },
-  { value: "COMPLETED", label: "Completed" },
-  { value: "CANCELLED", label: "Cancelled" },
-];
-
 export default function MemberBookingsPage() {
+  const { t } = useTranslation();
+  const statusOptions: { value: string; label: string }[] = [
+    { value: "all", label: t("member.bookings.filterAll") },
+    { value: "CONFIRMED", label: t("common.bookingStatus.CONFIRMED") },
+    { value: "PENDING", label: t("common.bookingStatus.PENDING") },
+    { value: "COMPLETED", label: t("common.bookingStatus.COMPLETED") },
+    { value: "CANCELLED", label: t("common.bookingStatus.CANCELLED") },
+  ];
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
   const { data, isLoading } = useMyBookings({
@@ -38,8 +39,8 @@ export default function MemberBookingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">My Bookings</h1>
-        <p className="text-muted-foreground mt-1">Your complete booking history.</p>
+        <h1 className="text-2xl font-bold">{t("member.bookings.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("member.bookings.subtitle")}</p>
       </div>
 
       {/* Filter */}
@@ -48,7 +49,7 @@ export default function MemberBookingsPage() {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {STATUS_OPTIONS.map((o) => (
+          {statusOptions.map((o) => (
             <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
         </SelectContent>
@@ -62,7 +63,7 @@ export default function MemberBookingsPage() {
       )}
 
       {data && data.data.length === 0 && (
-        <p className="text-center py-12 text-muted-foreground">No bookings found.</p>
+        <p className="text-center py-12 text-muted-foreground">{t("member.bookings.empty")}</p>
       )}
 
       {data && data.data.length > 0 && (
@@ -86,7 +87,7 @@ export default function MemberBookingsPage() {
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
           >
-            Previous
+            {t("member.bookings.previous")}
           </button>
           <span className="text-sm text-muted-foreground">
             {page} / {data.totalPages}
@@ -96,7 +97,7 @@ export default function MemberBookingsPage() {
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= data.totalPages}
           >
-            Next
+            {t("member.bookings.next")}
           </button>
         </div>
       )}

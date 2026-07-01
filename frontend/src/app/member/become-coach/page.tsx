@@ -12,8 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateCoachProfile } from "@/hooks/useCoach";
 import { SPECIALTIES, LANGUAGES } from "@/lib/constants";
+import { useTranslation } from "@/i18n";
 
 export default function BecomeCoachPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { isCoach } = useAuth();
   const createProfile = useCreateCoachProfile();
@@ -62,9 +64,9 @@ export default function BecomeCoachPage() {
           <GraduationCap className="h-6 w-6 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Become a Coach</h1>
+          <h1 className="text-2xl font-bold">{t("member.becomeCoach.title")}</h1>
           <p className="text-muted-foreground mt-1">
-            Set up your coach profile to start accepting bookings.
+            {t("member.becomeCoach.subtitle")}
           </p>
         </div>
       </div>
@@ -72,19 +74,19 @@ export default function BecomeCoachPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">About You</CardTitle>
+            <CardTitle className="text-base">{t("member.becomeCoach.aboutYou")}</CardTitle>
             <CardDescription>
-              You can refine these details later from your coach profile page.
+              {t("member.becomeCoach.aboutYouDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="bio">Bio *</Label>
+              <Label htmlFor="bio">{t("member.becomeCoach.bioLabel")}</Label>
               <Textarea
                 id="bio"
                 value={bio}
                 onChange={(event) => setBio(event.target.value)}
-                placeholder="Tell potential clients about your background, approach, and what you help with..."
+                placeholder={t("member.becomeCoach.bioPlaceholder")}
                 rows={5}
                 maxLength={2000}
                 required
@@ -92,7 +94,7 @@ export default function BecomeCoachPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="experience">Years of experience</Label>
+                <Label htmlFor="experience">{t("member.becomeCoach.experienceLabel")}</Label>
                 <Input
                   id="experience"
                   type="number"
@@ -102,12 +104,12 @@ export default function BecomeCoachPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location">{t("member.becomeCoach.locationLabel")}</Label>
                 <Input
                   id="location"
                   value={location}
                   onChange={(event) => setLocation(event.target.value)}
-                  placeholder="e.g., Taipei, Taiwan"
+                  placeholder={t("member.becomeCoach.locationPlaceholder")}
                 />
               </div>
             </div>
@@ -116,8 +118,8 @@ export default function BecomeCoachPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Specialties</CardTitle>
-            <CardDescription>Select all that apply.</CardDescription>
+            <CardTitle className="text-base">{t("member.becomeCoach.specialtiesTitle")}</CardTitle>
+            <CardDescription>{t("member.becomeCoach.specialtiesDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
@@ -128,7 +130,7 @@ export default function BecomeCoachPage() {
                   className="cursor-pointer hover:bg-primary/80"
                   onClick={() => toggle(selectedSpecialties, setSelectedSpecialties, specialty)}
                 >
-                  {specialty}
+                  {t(`taxonomy.specialty.${specialty}`)}
                 </Badge>
               ))}
             </div>
@@ -137,7 +139,7 @@ export default function BecomeCoachPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Languages</CardTitle>
+            <CardTitle className="text-base">{t("member.becomeCoach.languagesTitle")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
@@ -148,7 +150,7 @@ export default function BecomeCoachPage() {
                   className="cursor-pointer hover:bg-primary/80"
                   onClick={() => toggle(selectedLanguages, setSelectedLanguages, language)}
                 >
-                  {language}
+                  {t(`taxonomy.language.${language}`)}
                 </Badge>
               ))}
             </div>
@@ -157,14 +159,14 @@ export default function BecomeCoachPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Certifications</CardTitle>
-            <CardDescription>One per line.</CardDescription>
+            <CardTitle className="text-base">{t("member.becomeCoach.certificationsTitle")}</CardTitle>
+            <CardDescription>{t("member.becomeCoach.certificationsDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Textarea
               value={certifications}
               onChange={(event) => setCertifications(event.target.value)}
-              placeholder="ICF PCC Certification&#10;NASM Personal Trainer&#10;..."
+              placeholder={t("member.becomeCoach.certificationsPlaceholder")}
               rows={4}
             />
           </CardContent>
@@ -172,12 +174,12 @@ export default function BecomeCoachPage() {
 
         {createProfile.isError && (
           <p className="text-sm text-destructive">
-            Failed to create your coach profile. Please try again.
+            {t("member.becomeCoach.submitError")}
           </p>
         )}
 
         <Button type="submit" disabled={!isValid || createProfile.isPending}>
-          {createProfile.isPending ? "Creating profile..." : "Become a Coach"}
+          {createProfile.isPending ? t("member.becomeCoach.creating") : t("member.becomeCoach.submit")}
         </Button>
       </form>
     </div>

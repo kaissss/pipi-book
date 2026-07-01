@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, formatDateTime, formatDuration, formatCurrency, getInitials } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 import type { Coach, Service, AvailabilitySlot, PaymentMethod } from "@/types";
 
 interface BookingConfirmationProps {
@@ -22,9 +23,19 @@ interface BookingConfirmationProps {
   isLoading: boolean;
 }
 
-const PAYMENT_OPTIONS: { id: PaymentMethod; label: string; description: string; icon: typeof CreditCard }[] = [
-  { id: "CREDIT_CARD", label: "Card", description: "Pay online now via ECPay", icon: CreditCard },
-  { id: "CASH", label: "Cash", description: "Pay the coach in person", icon: Banknote },
+const PAYMENT_OPTIONS: { id: PaymentMethod; labelKey: string; descriptionKey: string; icon: typeof CreditCard }[] = [
+  {
+    id: "CREDIT_CARD",
+    labelKey: "booking.confirmation.card",
+    descriptionKey: "booking.confirmation.cardDescription",
+    icon: CreditCard,
+  },
+  {
+    id: "CASH",
+    labelKey: "booking.confirmation.cash",
+    descriptionKey: "booking.confirmation.cashDescription",
+    icon: Banknote,
+  },
 ];
 
 export default function BookingConfirmation({
@@ -38,12 +49,13 @@ export default function BookingConfirmation({
   onConfirm,
   isLoading,
 }: BookingConfirmationProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
       {/* Summary card */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Booking Summary</CardTitle>
+          <CardTitle className="text-base">{t("booking.confirmation.summary")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Coach */}
@@ -54,7 +66,7 @@ export default function BookingConfirmation({
             </Avatar>
             <div>
               <p className="font-medium text-sm">{coach.user.displayName}</p>
-              <p className="text-xs text-muted-foreground">Coach</p>
+              <p className="text-xs text-muted-foreground">{t("booking.confirmation.coach")}</p>
             </div>
           </div>
 
@@ -74,7 +86,7 @@ export default function BookingConfirmation({
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="font-medium text-sm">{formatDateTime(slot.startTime)}</p>
-              <p className="text-xs text-muted-foreground">to {formatDateTime(slot.endTime)}</p>
+              <p className="text-xs text-muted-foreground">{t("booking.confirmation.to", { time: formatDateTime(slot.endTime) })}</p>
             </div>
           </div>
 
@@ -90,7 +102,7 @@ export default function BookingConfirmation({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium text-sm">Total</span>
+              <span className="font-medium text-sm">{t("booking.confirmation.total")}</span>
             </div>
             <span className="font-bold text-lg">{formatCurrency(service.price)}</span>
           </div>
@@ -99,7 +111,7 @@ export default function BookingConfirmation({
 
       {/* Payment method */}
       <div className="space-y-2">
-        <Label>Payment method</Label>
+        <Label>{t("booking.confirmation.paymentMethod")}</Label>
         <div className="grid grid-cols-2 gap-3">
           {PAYMENT_OPTIONS.map((option) => {
             const Icon = option.icon;
@@ -118,8 +130,8 @@ export default function BookingConfirmation({
                   <Icon className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">{option.label}</p>
-                  <p className="text-xs text-muted-foreground">{option.description}</p>
+                  <p className="font-medium text-sm">{t(option.labelKey)}</p>
+                  <p className="text-xs text-muted-foreground">{t(option.descriptionKey)}</p>
                 </div>
               </button>
             );
@@ -129,10 +141,10 @@ export default function BookingConfirmation({
 
       {/* Notes */}
       <div className="space-y-2">
-        <Label htmlFor="notes">Notes for coach (optional)</Label>
+        <Label htmlFor="notes">{t("booking.confirmation.notesLabel")}</Label>
         <Textarea
           id="notes"
-          placeholder="Any specific topics, goals, or things you want the coach to know..."
+          placeholder={t("booking.confirmation.notesPlaceholder")}
           value={notes}
           onChange={(e) => onNotesChange(e.target.value)}
           rows={3}
@@ -147,15 +159,15 @@ export default function BookingConfirmation({
         disabled={isLoading}
       >
         {isLoading
-          ? "Processing..."
+          ? t("booking.confirmation.processing")
           : paymentMethod === "CASH"
-          ? "Confirm Booking"
-          : "Confirm & Pay"}
+          ? t("booking.confirmation.confirmBooking")
+          : t("booking.confirmation.confirmAndPay")}
       </Button>
       <p className="text-xs text-muted-foreground text-center">
         {paymentMethod === "CASH"
-          ? "Your booking will be pending until the coach confirms it. Pay in person at your session."
-          : "You will be redirected to ECPay to complete payment."}
+          ? t("booking.confirmation.cashHint")
+          : t("booking.confirmation.onlineHint")}
       </p>
     </div>
   );

@@ -57,19 +57,7 @@ export const SPECIALTIES = [
 
 export const LANGUAGES = ["English", "Chinese (Traditional)", "Chinese (Simplified)", "Japanese", "Korean"] as const;
 
-export const BOOKING_STATUS_LABELS: Record<string, string> = {
-  PENDING: "Pending",
-  CONFIRMED: "Confirmed",
-  CANCELLED: "Cancelled",
-  COMPLETED: "Completed",
-  NO_SHOW: "No Show",
-};
-
-export const COACH_STATUS_LABELS: Record<string, string> = {
-  PENDING: "Pending Review",
-  APPROVED: "Approved",
-  REJECTED: "Rejected",
-  SUSPENDED: "Suspended",
-};
+// Status display labels now live in the i18n `common` namespace
+// (common.bookingStatus.*, common.coachStatus.*) so they can be localized.
 
 export const PAGINATION_LIMIT = 12;

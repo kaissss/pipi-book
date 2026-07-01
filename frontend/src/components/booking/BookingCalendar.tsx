@@ -11,6 +11,7 @@ import { format, addMonths } from "date-fns";
 import { useCoachAvailability } from "@/hooks/useAvailability";
 import { Skeleton } from "@/components/ui/skeleton";
 import { slotEventColor } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 import type { AvailabilitySlot } from "@/types";
 
 interface BookingCalendarProps {
@@ -31,6 +32,7 @@ export default function BookingCalendar({
   onSlotSelect,
   serviceDurationMinutes,
 }: BookingCalendarProps) {
+  const { t } = useTranslation();
   const [range, setRange] = useState(() => {
     const now = new Date();
     return {
@@ -67,12 +69,12 @@ export default function BookingCalendar({
       start: slot.startTime,
       end: slot.endTime,
       title: selected
-        ? "Available (Selected)"
+        ? t("booking.calendar.availableSelected")
         : bookable
-        ? "Available"
+        ? t("booking.calendar.available")
         : slot.status === "BOOKED"
-        ? "Booked"
-        : "Unavailable",
+        ? t("booking.calendar.booked")
+        : t("booking.calendar.unavailable"),
       backgroundColor: color,
       borderColor: selected ? "#d97706" : color,
       classNames: selected ? ["ring-2 ring-primary ring-offset-1"] : [],
@@ -138,8 +140,8 @@ export default function BookingCalendar({
       />
       <p className="text-xs text-muted-foreground mt-2 text-center">
         {serviceDurationMinutes
-          ? `Green slots are available (${serviceDurationMinutes}-min, matching your session) — tap to select. Blue = booked; grey = a different length.`
-          : "Green slots are available — tap to select. Blue slots are booked."}
+          ? t("booking.calendar.legendWithDuration", { minutes: serviceDurationMinutes })
+          : t("booking.calendar.legend")}
       </p>
     </div>
   );

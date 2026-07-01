@@ -4,6 +4,7 @@ import { CreditCard, Smartphone, Banknote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn, formatCurrency } from "@/lib/utils";
+import { useTranslation } from "@/i18n";
 import type { PaymentMethod } from "@/types";
 
 interface PaymentFormProps {
@@ -14,23 +15,23 @@ interface PaymentFormProps {
   isLoading: boolean;
 }
 
-const PAYMENT_METHODS: { id: PaymentMethod; label: string; description: string; icon: React.ReactNode }[] = [
+const PAYMENT_METHODS: { id: PaymentMethod; labelKey: string; descriptionKey: string; icon: React.ReactNode }[] = [
   {
     id: "ECPAY",
-    label: "ECPay",
-    description: "Credit card, ATM, CVS, WebATM",
+    labelKey: "booking.payment.ecpay",
+    descriptionKey: "booking.payment.ecpayDescription",
     icon: <CreditCard className="h-5 w-5" />,
   },
   {
     id: "LINE_PAY",
-    label: "LINE Pay",
-    description: "Pay with your LINE wallet",
+    labelKey: "booking.payment.linePay",
+    descriptionKey: "booking.payment.linePayDescription",
     icon: <Smartphone className="h-5 w-5 text-line" />,
   },
   {
     id: "CASH",
-    label: "Cash",
-    description: "Pay the coach in person",
+    labelKey: "booking.payment.cash",
+    descriptionKey: "booking.payment.cashDescription",
     icon: <Banknote className="h-5 w-5" />,
   },
 ];
@@ -42,6 +43,7 @@ export default function PaymentForm({
   onPay,
   isLoading,
 }: PaymentFormProps) {
+  const { t } = useTranslation();
   const isCash = selectedMethod === "CASH";
 
   return (
@@ -66,8 +68,8 @@ export default function PaymentForm({
                 {method.icon}
               </div>
               <div>
-                <p className="font-medium text-sm">{method.label}</p>
-                <p className="text-xs text-muted-foreground">{method.description}</p>
+                <p className="font-medium text-sm">{t(method.labelKey)}</p>
+                <p className="text-xs text-muted-foreground">{t(method.descriptionKey)}</p>
               </div>
               <div className="ml-auto">
                 <div className={cn(
@@ -84,17 +86,17 @@ export default function PaymentForm({
 
       <div className="bg-muted rounded-lg p-4 text-sm">
         <div className="flex justify-between">
-          <span>Session fee</span>
+          <span>{t("booking.payment.sessionFee")}</span>
           <span className="font-semibold">{formatCurrency(amount)}</span>
         </div>
       </div>
 
       <Button className="w-full" size="lg" onClick={onPay} disabled={isLoading}>
         {isLoading
-          ? "Processing..."
+          ? t("booking.payment.processing")
           : isCash
-          ? "Confirm Booking"
-          : `Pay ${formatCurrency(amount)}`}
+          ? t("booking.payment.confirmBooking")
+          : t("booking.payment.payAmount", { amount: formatCurrency(amount) })}
       </Button>
     </div>
   );

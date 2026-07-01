@@ -764,3 +764,29 @@ to use `t()`, losing per-page metadata titles; `/coaches` kept server metadata b
 moving its heading into the client `CoachList`.
 
 Verified: `tsc --noEmit` clean; `next build` passes (all 21 routes). Frontend only.
+
+---
+
+## 2026-07-02 — Fix: coach bookings queried by user id
+
+`GET /api/v1/bookings/coach` returned nothing for every coach.
+
+Root cause: the controller passed `user.sub` (the JWT **user id**) straight into
+`findByCoachId`, but `booking.coachId` stores the **Coach record id**. Different
+ids → no match → empty list.
+
+Fix (query by coachId, resolving it first):
+- `BookingService` now injects `CoachRepository`. `getCoachBookings(userId)`
+  resolves the caller's coach via `findByUserId(userId)` → `coach.id`, then calls
+  `bookingRepository.findByCoachId(coach.id)` (`where: { coachId }`). No coach
+  profile → empty paginated result instead of an error.
+- `BookingModule` imports `CoachModule` (already exports `CoachRepository`); no
+  circular dependency (CoachModule imports nothing).
+
+Cleanups (per "raise bad practice"):
+- removed a stray `console.log('Finding bookings for coach...')` in the
+  repository (codebase uses the structured `Logger`).
+- renamed the misleading `getPiPiBookings` (bad Coach→PiPi find/replace artifact)
+  to `getCoachBookings` in the controller + service.
+
+Route `/bookings/coach` unchanged → no frontend change. `tsc --noEmit` clean.

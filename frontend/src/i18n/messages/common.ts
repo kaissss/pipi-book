@@ -86,7 +86,7 @@ const en = {
 const zhTW: typeof en = {
   nav: {
     findCoaches: "尋找教練",
-    dashboard: "儀表板",
+    dashboard: "課程管理",
     profile: "個人資料",
     becomeCoach: "成為教練",
     signOut: "登出",
@@ -98,7 +98,7 @@ const zhTW: typeof en = {
   roles: {
     ADMIN: "管理員",
     COACH: "教練",
-    STUDENT: "會員",
+    STUDENT: "學員",
   },
   portal: {
     coach: "教練後台",
@@ -106,8 +106,8 @@ const zhTW: typeof en = {
     admin: "管理後台",
   },
   portalNav: {
-    dashboard: "儀表板",
-    schedule: "行程管理",
+    dashboard: "總覽",
+    schedule: "時段安排",
     services: "服務項目",
     bookings: "預約管理",
     myBookings: "我的預約",

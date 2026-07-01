@@ -60,7 +60,10 @@ export class BookingRepository {
     page = 1,
     limit = 10,
   ): Promise<{ data: BookingWithRelations[]; total: number }> {
-    const where = { coachId, ...(status && { bookingStatus: status }) };
+    const where: Prisma.BookingWhereInput = {
+      coachId,
+      ...(status && { bookingStatus: status }),
+    };
     const [data, total] = await this.prisma.$transaction([
       this.prisma.booking.findMany({
         where,

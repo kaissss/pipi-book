@@ -95,7 +95,7 @@ const zhTW: typeof en = {
     selectService: "選擇服務項目",
     continueToSchedule: "下一步：選擇時段",
     pickTimeSlot: "選擇時段",
-    changeService: "更換服務",
+    changeService: "更換服務項目",
     continueToConfirmation: "下一步：確認預約",
     confirmAndPay: "確認並付款",
     changeSlot: "更換時段",

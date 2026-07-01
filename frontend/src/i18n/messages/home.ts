@@ -62,7 +62,7 @@ const zhTW: typeof en = {
   specialties: {
     heading: "熱門教練領域",
     labels: {
-      "Life Coaching": "生活教練",
+      "Life Coaching": "生涯教練",
       Business: "商業",
       Career: "職涯",
       "Health & Wellness": "健康與保健",

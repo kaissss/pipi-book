@@ -4,9 +4,10 @@ import { BookingService } from './booking.service';
 import { BookingRepository } from './booking.repository';
 import { BookingRedisLockService } from './booking.redis-lock.service';
 import { AvailabilityModule } from '../availability/availability.module';
+import { CoachModule } from '../coach/coach.module';
 
 @Module({
-  imports: [AvailabilityModule],
+  imports: [AvailabilityModule, CoachModule],
   controllers: [BookingController],
   providers: [
     BookingService,

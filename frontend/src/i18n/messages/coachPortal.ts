@@ -106,7 +106,7 @@ const zhTW: typeof en = {
     noSessionsToday: "今天沒有安排任何課程。",
   },
   schedule: {
-    title: "行程管理",
+    title: "時段安排",
     subtitle:
       "拖曳以新增時段，再儲存。可拖曳或調整尚未儲存的時段；點選可預約時段即可標記為刪除。",
     deselect: "取消選取",

@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { BookingRepository } from './booking.repository';
 import { AvailabilityRepository } from '../availability/availability.repository';
+import { CoachRepository } from '../coach/coach.repository';
 import { BookingRedisLockService } from './booking.redis-lock.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { BookingResponseDto } from './dto/booking-response.dto';
@@ -27,6 +28,7 @@ export class BookingService {
   constructor(
     private readonly bookingRepository: BookingRepository,
     private readonly availabilityRepository: AvailabilityRepository,
+    private readonly coachRepository: CoachRepository,
     private readonly redisLock: BookingRedisLockService,
     private readonly prisma: PrismaService,
   ) {}
@@ -221,13 +223,20 @@ export class BookingService {
     };
   }
 
-  async getPiPiBookings(
-    coachId: string,
+  async getCoachBookings(
+    userId: string,
     status?: BookingStatus,
     page = 1,
     limit = 10,
   ): Promise<{ data: BookingResponseDto[]; total: number; page: number; limit: number; totalPages: number }> {
-    const { data, total } = await this.bookingRepository.findByCoachId(coachId, status, page, limit);
+    // Bookings reference the Coach record id, not the user id — resolve the
+    // caller's coach profile first, then query bookings by that coachId.
+    const coach = await this.coachRepository.findByUserId(userId);
+    if (!coach) {
+      return { data: [], total: 0, page, limit, totalPages: 0 };
+    }
+
+    const { data, total } = await this.bookingRepository.findByCoachId(coach.id, status, page, limit);
     return {
       data: data.map(this.toResponseDto),
       total,

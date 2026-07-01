@@ -29,7 +29,7 @@ const en = {
 
 const zhTW: typeof en = {
   specialty: {
-    "Life Coaching": "生活教練",
+    "Life Coaching": "生涯教練",
     "Business Coaching": "商業教練",
     "Career Coaching": "職涯教練",
     "Executive Coaching": "高階主管教練",
